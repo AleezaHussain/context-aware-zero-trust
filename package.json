@@ -1,0 +1,15 @@
+{
+  "name": "context-aware-smart-contract",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node scripts/deploy_and_test.js"
+  },
+  "dependencies": {
+    "@ganache/cli": "^0.10.2",
+    "ganache-core": "2.13.2",
+    "paillier-bigint": "^3.4.3",
+    "solc": "^0.8.20",
+    "web3": "1.10.0"
+  }
+}

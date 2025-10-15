@@ -1,0 +1,10 @@
+attribute,inEvents,inTxs,pctEvent,pctTx
+temperature,200,200,100.00,100.00
+humidity,200,200,100.00,100.00
+totalMeterSignal,200,200,100.00,100.00
+totalDevicesPowerValue,0,200,0.00,100.00
+hour,200,200,100.00,100.00
+ac1Power,200,200,100.00,100.00
+ac2Power,200,200,100.00,100.00
+ac3Power,200,200,100.00,100.00
+carBatteryPowerStatus,200,200,100.00,100.00

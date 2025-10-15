@@ -6,11 +6,16 @@ const Gpio = require('pigpio').Gpio;
 var Web3 = require('web3')
 var web3 = new Web3()
 
-	// Web3 provider setting
-	web3 = new Web3(new Web3.providers.HttpProvider("http://192.168.0.38:22000"));
+// Read RPC URL and contract address from environment variables for security/configurability
+const RPC_URL = process.env.RPC_URL || 'http://192.168.0.38:22000';
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || '0xa2c66ff8392b35742ecc82532f9069463c675c8e';
 
+// Web3 provider setting
+web3 = new Web3(new Web3.providers.HttpProvider(RPC_URL));
 
-	web3.eth.defaultAccount = web3.eth.accounts[0];
+// Note: for web3 v1.x, setting defaultAccount typically requires accounts from the provider
+// Keep defaultAccount unset here; callers should specify `from` in transactions or configure a managed account.
+// web3.eth.defaultAccount = web3.eth.accounts[0];
 
 
 //contract abi update as deployed
@@ -220,7 +225,68 @@ var web3 = new Web3()
 
 		);
 
-var device = deviceControl.at("0xa2c66ff8392b35742ecc82532f9069463c675c8e"); // smart contract addres, update as deployed
+if (!process.env.CONTRACT_ADDRESS) {
+	console.warn('Warning: using default CONTRACT_ADDRESS from source. Set CONTRACT_ADDRESS env var to override.');
+}
+
+// For web3 v1.x use the Contract wrapper. `deviceControl` above is the ABI array; create a Contract instance.
+const deviceContract = new web3.eth.Contract(deviceControl, CONTRACT_ADDRESS);
+
+// PRIVATE_KEY should be the hex private key (no 0x) for the account that is owner of the contract in Quorum.
+// Prefer keystore-based key storage for local ZTA demo
+const KEYSTORE_PATH = process.env.KEYSTORE_PATH || null;
+const KEYSTORE_PASSWORD = process.env.KEYSTORE_PASSWORD || null;
+let PRIVATE_KEY = process.env.PRIVATE_KEY || null;
+if (KEYSTORE_PATH && KEYSTORE_PASSWORD) {
+	try {
+		const keystore = require('./keystore');
+		PRIVATE_KEY = keystore.loadKeystore(KEYSTORE_PATH, KEYSTORE_PASSWORD);
+		console.log('Loaded private key from keystore.');
+	} catch (err) {
+		console.error('Failed to load keystore:', err.message);
+	}
+}
+if (!PRIVATE_KEY) {
+	console.warn('No PRIVATE_KEY set in env — transactions will fail unless using an unlocked node account. For ZTA, use an HSM or KMS instead of raw keys in env.');
+}
+
+// Minimal ABI for signed entrypoint and nonce lookup
+const signedAbi = [
+	{
+		"constant": true,
+		"inputs": [ { "name": "", "type": "address" } ],
+		"name": "nonces",
+		"outputs": [ { "name": "", "type": "uint256" } ],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{"name":"_temperature","type":"uint256"},
+			{"name":"_humidity","type":"uint256"},
+			{"name":"_totalMeterSignal","type":"uint256"},
+			{"name":"_totalDevicesPowerValue","type":"uint256"},
+			{"name":"_hour","type":"uint256"},
+			{"name":"_ac1Power","type":"uint256"},
+			{"name":"_ac2Power","type":"uint256"},
+			{"name":"_ac3Power","type":"uint256"},
+			{"name":"_carBatteryPowerStatus","type":"uint256"},
+			{"name":"_nonce","type":"uint256"},
+			{"name":"v","type":"uint8"},
+			{"name":"r","type":"bytes32"},
+			{"name":"s","type":"bytes32"}
+		],
+		"name": "setContextDataSigned",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+];
+
+const signedContract = new web3.eth.Contract(signedAbi, CONTRACT_ADDRESS);
 
 // Interaction with GPIO
 
@@ -395,9 +461,98 @@ var minutes = now.getMinutes();
 var hour = now.getHours();
 
 console.log('Weather Conditions::'+'temperature: ' + readout.temperature.toFixed(1) + '°C,   ' + 'humidity: ' + readout.humidity.toFixed(1) + '%');
-console.log(device.setContextAttributesData(readout.temperature.toFixed(1) ,readout.humidity.toFixed(1), ac1Power, ac2Power, ac3Power, hour, bVoltage));  // ac1. ac2, ac3, carBattery
-console.log('those we want to send', acPower, hPower, wPower, bVoltage); // ac1. ac2, ac3, carBattery
-console.log('the time is', hour. minutes);
+
+// Build and send signed transaction to setContextData (if PRIVATE_KEY provided). Uses web3.eth.accounts.signTransaction
+async function sendContextToChain() {
+	try {
+		const fromAccount = PRIVATE_KEY ? web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY).address : (process.env.DEFAULT_ACCOUNT || null);
+		if (!fromAccount) {
+			console.error('No from account available. Set PRIVATE_KEY or DEFAULT_ACCOUNT in env.');
+			return;
+		}
+
+		// Prepare numeric values
+		const t = Math.round(readout.temperature.toFixed(0));
+		const h = Math.round(readout.humidity.toFixed(0));
+		const totalMeter = 0; // placeholder
+		const totalDevices = Math.round((Number(ac1Power) + Number(ac2Power) + Number(ac3Power)) || 0);
+		const hr = hour;
+		const a1 = Math.round(ac1Power || 0);
+		const a2 = Math.round(ac2Power || 0);
+		const a3 = Math.round(ac3Power || 0);
+		const bv = Math.round(bVoltage || 0);
+
+		// Fetch nonce from contract for this signer
+		const nonce = await signedContract.methods.nonces(fromAccount).call();
+
+		// Create the packed hash matching the contract's abi.encodePacked(...) then keccak256
+		const payloadHash = web3.utils.soliditySha3(
+			{type: 'uint256', value: t},
+			{type: 'uint256', value: h},
+			{type: 'uint256', value: totalMeter},
+			{type: 'uint256', value: totalDevices},
+			{type: 'uint256', value: hr},
+			{type: 'uint256', value: a1},
+			{type: 'uint256', value: a2},
+			{type: 'uint256', value: a3},
+			{type: 'uint256', value: bv},
+			{type: 'uint256', value: nonce},
+			{type: 'address', value: CONTRACT_ADDRESS}
+		);
+
+		let sig;
+		if (PRIVATE_KEY) {
+			sig = web3.eth.accounts.sign(payloadHash, '0x' + PRIVATE_KEY);
+		} else {
+			// ask node to sign (requires unlocked account)
+			sig = await web3.eth.sign(payloadHash, fromAccount);
+			// web3.eth.sign returns a signature string, normalize to r,s,v
+			const sigStr = sig;
+			sig = {
+				signature: sigStr,
+				v: parseInt(sigStr.slice(130, 132), 16),
+				r: '0x' + sigStr.slice(2, 66),
+				s: '0x' + sigStr.slice(66, 130)
+			};
+		}
+
+		const v = typeof sig.v === 'string' ? parseInt(sig.v, 10) : sig.v;
+		const r = sig.r;
+		const s = sig.s;
+
+		// Build transaction data for setContextDataSigned
+		const txData = signedContract.methods.setContextDataSigned(
+			t, h, totalMeter, totalDevices, hr, a1, a2, a3, bv, Number(nonce), v, r, s
+		).encodeABI();
+
+		const txCount = await web3.eth.getTransactionCount(fromAccount);
+		const tx = {
+			to: CONTRACT_ADDRESS,
+			data: txData,
+			gas: 400000,
+			gasPrice: '0x0',
+			nonce: web3.utils.toHex(txCount)
+		};
+
+		if (PRIVATE_KEY) {
+			const signedTx = await web3.eth.accounts.signTransaction(tx, '0x' + PRIVATE_KEY);
+			const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+			console.log('Signed payload tx receipt', receipt.transactionHash);
+		} else {
+			// send via unlocked node account
+			const receipt = await web3.eth.sendTransaction(tx);
+			console.log('Signed payload tx receipt (node-sent)', receipt.transactionHash || receipt.transactionHash === undefined ? receipt : receipt.transactionHash);
+		}
+
+	} catch (err) {
+		console.error('Failed to send signed context to chain', err);
+	}
+}
+
+sendContextToChain();
+
+console.log('those we want to send', ac1Power, ac2Power, ac3Power, bVoltage);
+console.log('the time is', hour);
 
 var a = 0;
 
@@ -437,19 +592,20 @@ fs.appendFile('js/export1.csv',  dataToSave, (err) => { //////fs.writeFile('js/e
 
 //output data and devices
 
-setInterval(function(){
+setInterval(async function(){
 
 	//let angle=0;
 	//let increment=1;
-	var result1 = device.getAcActionAttributes.call();
-	var result2= device.getAc2ActionAttributes.call();
-	var result3= device.getAc3ActionAttributes.call();
-	var result4= device.getBatteryActionAttributes.call();
+	// call contract read-only methods
+	let result1 = await deviceContract.methods.getAcActionAttributes().call();
+	let result2 = await deviceContract.methods.getAc2ActionAttributes().call();
+	let result3 = await deviceContract.methods.getAc3ActionAttributes().call();
+	let result4 = await deviceContract.methods.getBatteryActionAttributes().call();
 
-    var a=result1.toNumber(); //Ac1
-	var b=result2.toNumber(); //Ac2
-	var c=result3.toNumber(); //Ac3
-	var d=result4.toNumber(); //battery
+	var a = Number(result1); //Ac1
+	var b = Number(result2); //Ac2
+	var c = Number(result3); //Ac3
+	var d = Number(result4); //battery
 
 	console.log('ac1 result is',a);
 	console.log('ac2 result is',b);

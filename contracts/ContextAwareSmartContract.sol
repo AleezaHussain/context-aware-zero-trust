@@ -1,214 +1,216 @@
-pragma solidity^0.5.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
 
-/*Receiving the context attributes from the sensors
-such as the temperature, humidity, current and power sensors
-using Celcius and power values 
+/*
+ Context-Aware Smart Contract with:
+  • Owner and minimal RBAC (ADMIN/REGISTRAR)
+  • Device authorization
+  • Signed context payloads (to support Zero Trust)
+  • Struct-based payload to fix “stack too deep”
 */
 
-contract ContextManager
-
-{    
+contract ContextManager {
+    // ----- State -----
     uint public temperature;
     uint public humidity;
     uint public totalMeterSignal;
-    uint public totalDevicesPowerValue; //initialize according to your devices power use
+    uint public totalDevicesPowerValue;
     uint public ac1Power;
     uint public ac2Power;
     uint public ac3Power;
     uint public carBatteryPowerStatus;
-    uint hour;
- 
-    function setContextData (uint _temperature, uint _humidity,
+    uint public hour;
+    address public owner;
+
+    // ----- Roles -----
+    bytes32 public ADMIN_ROLE;
+    bytes32 public REGISTRAR_ROLE;
+    mapping(bytes32 => mapping(address => bool)) public roles;
+
+    // ----- Authorization -----
+    mapping(address => bool) public authorizedDevice;
+    mapping(address => uint) public nonces;
+
+    // ----- Events -----
+    event ContextUpdated(
+        uint temperature,
+        uint humidity,
+        uint hour,
+        uint totalMeterSignal,
+        uint ac1Power,
+        uint ac2Power,
+        uint ac3Power,
+        uint carBatteryPowerStatus
+    );
+
+    event DeviceAuthorized(address device);
+    event DeviceDeauthorized(address device);
+
+    // ----- Constructor -----
+    constructor() {
+        owner = msg.sender;
+        ADMIN_ROLE = keccak256(abi.encodePacked("ADMIN_ROLE"));
+        REGISTRAR_ROLE = keccak256(abi.encodePacked("REGISTRAR_ROLE"));
+        roles[ADMIN_ROLE][msg.sender] = true;
+        roles[REGISTRAR_ROLE][msg.sender] = true;
+    }
+
+    // ----- Modifiers -----
+    modifier onlyOwner() {
+        require(msg.sender == owner, "only owner");
+        _;
+    }
+
+    modifier onlyRole(bytes32 role) {
+        require(roles[role][msg.sender], "missing role");
+        _;
+    }
+
+    // ----- Ownership -----
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "invalid address");
+        owner = newOwner;
+    }
+
+    // ----- Role Management -----
+    function grantRole(bytes32 role, address account) external onlyRole(ADMIN_ROLE) {
+        roles[role][account] = true;
+    }
+
+    function revokeRole(bytes32 role, address account) external onlyRole(ADMIN_ROLE) {
+        roles[role][account] = false;
+    }
+
+    // ----- Device Authorization -----
+    function authorizeDevice(address device) external onlyRole(REGISTRAR_ROLE) {
+        authorizedDevice[device] = true;
+        emit DeviceAuthorized(device);
+    }
+
+    function deauthorizeDevice(address device) external onlyRole(REGISTRAR_ROLE) {
+        authorizedDevice[device] = false;
+        emit DeviceDeauthorized(device);
+    }
+
+    // ----- Struct to fix stack depth -----
+    struct ContextPayload {
+        uint temperature;
+        uint humidity;
+        uint totalMeterSignal;
+        uint totalDevicesPowerValue;
+        uint hour;
+        uint ac1Power;
+        uint ac2Power;
+        uint ac3Power;
+        uint carBatteryPowerStatus;
+        uint nonce;
+    }
+
+    // ----- Signed Context Submission -----
+    function setContextDataSigned(
+        ContextPayload calldata data,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external {
+        // Hash the struct safely — using abi.encode ensures unique encoding
+        bytes32 hash = keccak256(
+            abi.encode(
+                data.temperature,
+                data.humidity,
+                data.totalMeterSignal,
+                data.totalDevicesPowerValue,
+                data.hour,
+                data.ac1Power,
+                data.ac2Power,
+                data.ac3Power,
+                data.carBatteryPowerStatus,
+                data.nonce,
+                address(this)
+            )
+        );
+
+    // match web3.eth.accounts.sign which prefixes the message
+    bytes32 prefixed = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+    address signer = ecrecover(prefixed, v, r, s);
+        require(signer != address(0), "invalid signature");
+        require(authorizedDevice[signer], "device not authorized");
+        require(nonces[signer] == data.nonce, "invalid nonce");
+
+        nonces[signer] = data.nonce + 1;
+
+        // update context
+        temperature = data.temperature;
+        humidity = data.humidity;
+        hour = data.hour;
+        totalMeterSignal = data.totalMeterSignal;
+        ac1Power = data.ac1Power;
+        ac2Power = data.ac2Power;
+        ac3Power = data.ac3Power;
+        carBatteryPowerStatus = data.carBatteryPowerStatus;
+        totalDevicesPowerValue = data.totalDevicesPowerValue;
+
+        emit ContextUpdated(
+            data.temperature,
+            data.humidity,
+            data.hour,
+            data.totalMeterSignal,
+            data.ac1Power,
+            data.ac2Power,
+            data.ac3Power,
+            data.carBatteryPowerStatus
+        );
+    }
+
+    // ----- Basic owner setter (optional) -----
+    function setContextData(
+        uint _temperature,
+        uint _humidity,
         uint _totalMeterSignal,
         uint _totalDevicesPowerValue,
         uint _hour,
         uint _ac1Power,
         uint _ac2Power,
         uint _ac3Power,
-        uint _carBatteryPowerStatus) public 
-    { 
+        uint _carBatteryPowerStatus
+    ) external onlyOwner {
         temperature = _temperature;
-        humidity = _humidity;   
+        humidity = _humidity;
         hour = _hour;
         totalMeterSignal = _totalMeterSignal;
         ac1Power = _ac1Power;
         ac2Power = _ac2Power;
         ac3Power = _ac3Power;
-        carBatteryPowerStatus= _carBatteryPowerStatus;
-        totalDevicesPowerValue= _totalDevicesPowerValue;
-    }
-    
-    function getContextData() public view returns (uint, uint,uint,
-    uint, uint, uint,uint, uint)
-    {        
-        return (temperature, humidity,
-        hour,
-        totalMeterSignal,
-        ac1Power,
-        ac2Power,
-        ac3Power,
-        carBatteryPowerStatus);
-    }
-    
-}
+        carBatteryPowerStatus = _carBatteryPowerStatus;
+        totalDevicesPowerValue = _totalDevicesPowerValue;
 
-/*Making  a plan and analyse of the context
-and for what kind of change and result of the context for the system*/
-
-contract Reasoner is ContextManager
-{    
-    bool public stateOfDevices;
-    bool public stateHumidity;
-    bool public stateTemperature;
-   
-    enum DeviceStatusForAc1 { 
-        ON, OFF  // ON is 0 and OFF is 1
-        }
-      
-    enum DeviceStatusForAc2{       
-       ON, OFF // ON is 0 and OFF is 1
-        } 
-   
-     enum DeviceStatusForAc3 {        
-       ON, OFF  // On is 0 and OFF is 1
-        }
-   
-    enum DeviceStatusForBatteryCharging { 
-          ON, OFF // On is 0 and OFF is 1
-        }
-   
-   DeviceStatusForAc1 changeAc1Status;
-   DeviceStatusForAc2 changeAc2Status;
-   DeviceStatusForAc3 changeAc3Status;
-   DeviceStatusForBatteryCharging changeBatteryStatus;
-            
-    function setAppliancesContextState() public     
-        {
-            //stateTemperature= _stateTemperature;
-            // Watts = AmpsRMS * AC_VOLT;
-        totalDevicesPowerValue = ac1Power+ac2Power+ac3Power;
-            
-        if (totalDevicesPowerValue > totalMeterSignal ) //off devices        
-        { 
-            stateOfDevices= false ;
-            changeAc1Status = DeviceStatusForAc1.OFF;
-            changeAc2Status = DeviceStatusForAc2.OFF;
-            changeAc3Status = DeviceStatusForAc3.OFF;
-            changeBatteryStatus = DeviceStatusForBatteryCharging.OFF;
-        }        
-        else if (totalDevicesPowerValue < totalMeterSignal) 
-            {
-            //check weather                    
-                if (temperature > 28 && humidity > 30 )
-                   { 
-                       changeAc1Status = DeviceStatusForAc1.ON;
-                       changeAc2Status =DeviceStatusForAc2.OFF;            
-                    }
-                    else if (temperature < 28 && humidity < 30 ) //on fan
-                         { 
-                            changeAc1Status = DeviceStatusForAc1.OFF;
-                            changeAc2Status = DeviceStatusForAc2.ON;
-                        }
-                    else
-                        {
-                            changeAc1Status = DeviceStatusForAc1.ON;
-                            changeAc2Status = DeviceStatusForAc2.ON;
-                        }                    
-            //check priority
-            
-            //check time
-                setAc3ContextState();
-                setCarBatteryContextState();
-            }
+        emit ContextUpdated(
+            _temperature,
+            _humidity,
+            _hour,
+            _totalMeterSignal,
+            _ac1Power,
+            _ac2Power,
+            _ac3Power,
+            _carBatteryPowerStatus
+        );
     }
-    
-     function setAc3ContextState( ) public 
+
+    // ----- Getter -----
+    function getContextData()
+        external
+        view
+        returns (uint, uint, uint, uint, uint, uint, uint, uint)
     {
-        if (hour >= 10 && hour <= 18) //duration
-        
-         {changeAc3Status = DeviceStatusForAc3.ON;}
-             
-         else if (hour <= 10 && hour >= 18) //time
-
-         {changeAc3Status= DeviceStatusForAc3.OFF;}
-    }
-    
-    function setCarBatteryContextState( ) public 
-    {         
-        if (hour >= 21 && hour <= 8 && carBatteryPowerStatus <=20) //time
-        
-         {changeBatteryStatus =DeviceStatusForBatteryCharging.ON;}
-         
-         else if
-         
-         (hour < 21 && hour > 8 && carBatteryPowerStatus >=80)
-         
-         {changeBatteryStatus= DeviceStatusForBatteryCharging.OFF;}
+        return (
+            temperature,
+            humidity,
+            hour,
+            totalMeterSignal,
+            ac1Power,
+            ac2Power,
+            ac3Power,
+            carBatteryPowerStatus
+        );
     }
 }
-
-/* Result of the desired action attributes to be sent for actuation to take place
-situation and actions to take place
-*/
-     
-contract OperationsManager is Reasoner { 
-        
-        //event fanEvent (uint data1);
-        //event windowEvent (uint data2);
-   
-    function getAcActionAttributes() public  returns (DeviceStatusForAc1)
-    {
-        setAppliancesContextState();
-       
-        //return enableF;
-        // emit fanEvent(enableF);
-   
-        // function getStatus() public view returns (DeviceStatus) {
-        return changeAc1Status;
-    
-    }
-  
-     
-     
-    function getAc2ActionAttributes() public  returns (DeviceStatusForAc2)
-    { 
-        setAppliancesContextState();
-        //return enableW;
-        // emit windowEvent(enableW);
-        
-        // function getStatus() public view returns (DeviceStatus) {
-        return changeAc2Status;
-        
-        
-    }
-    
-    
-    function getAc3ActionAttributes() public  returns (DeviceStatusForAc3)
-    { 
-        setAc3ContextState();
-        
-        //return enableW;
-        // emit windowEvent(enableW);
-        
-        // function getStatus() public view returns (DeviceStatus) {
-        return changeAc3Status;
-    }
-    
-    function getBatteryActionAttributes() public  returns (DeviceStatusForBatteryCharging)
-    { 
-        setCarBatteryContextState();
-        
-        //return enableW;
-        // emit windowEvent(enableW);
-        
-        // function getStatus() public view returns (DeviceStatus) {
-        return changeBatteryStatus;
-        
-    }
-}
-
-
-
-
-
-
