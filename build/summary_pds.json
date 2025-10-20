@@ -1,0 +1,22 @@
+{
+  "params": {
+    "devices": 2,
+    "updates": 2,
+    "wCipher": 0.25
+  },
+  "A": {
+    "attributePDS": 1,
+    "signerPDS": 1,
+    "combinedPDS": 1
+  },
+  "B": {
+    "attributePDS": 1,
+    "signerPDS": 0,
+    "combinedPDS": 0.5
+  },
+  "C": {
+    "attributePDS": 0.25,
+    "signerPDS": 0,
+    "combinedPDS": 0.125
+  }
+}

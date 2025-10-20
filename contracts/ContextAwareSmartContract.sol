@@ -25,6 +25,7 @@ contract ContextManager {
     // ----- Roles -----
     bytes32 public ADMIN_ROLE;
     bytes32 public REGISTRAR_ROLE;
+    bytes32 public GATEWAY_ROLE;
     mapping(bytes32 => mapping(address => bool)) public roles;
 
     // ----- Authorization -----
@@ -32,16 +33,8 @@ contract ContextManager {
     mapping(address => uint) public nonces;
 
     // ----- Events -----
-    event ContextUpdated(
-        uint temperature,
-        uint humidity,
-        uint hour,
-        uint totalMeterSignal,
-        uint ac1Power,
-        uint ac2Power,
-        uint ac3Power,
-        uint carBatteryPowerStatus
-    );
+    // Legacy context event removed — this contract now performs device verification only
+    event DeviceVerified();
 
     event DeviceAuthorized(address device);
     event DeviceDeauthorized(address device);
@@ -51,8 +44,10 @@ contract ContextManager {
         owner = msg.sender;
         ADMIN_ROLE = keccak256(abi.encodePacked("ADMIN_ROLE"));
         REGISTRAR_ROLE = keccak256(abi.encodePacked("REGISTRAR_ROLE"));
+        GATEWAY_ROLE = keccak256(abi.encodePacked("GATEWAY_ROLE"));
         roles[ADMIN_ROLE][msg.sender] = true;
         roles[REGISTRAR_ROLE][msg.sender] = true;
+        roles[GATEWAY_ROLE][msg.sender] = true; // owner can initially act as gateway
     }
 
     // ----- Modifiers -----
@@ -137,29 +132,50 @@ contract ContextManager {
         require(authorizedDevice[signer], "device not authorized");
         require(nonces[signer] == data.nonce, "invalid nonce");
 
-        nonces[signer] = data.nonce + 1;
+    // Zero-Trust only: we DO NOT store the contextual attributes on-chain here.
+    // Advance nonce to prevent replay and emit a minimal verification event.
+    nonces[signer] = data.nonce + 1;
+    emit DeviceVerified();
+    }
 
-        // update context
-        temperature = data.temperature;
-        humidity = data.humidity;
-        hour = data.hour;
-        totalMeterSignal = data.totalMeterSignal;
-        ac1Power = data.ac1Power;
-        ac2Power = data.ac2Power;
-        ac3Power = data.ac3Power;
-        carBatteryPowerStatus = data.carBatteryPowerStatus;
-        totalDevicesPowerValue = data.totalDevicesPowerValue;
-
-        emit ContextUpdated(
-            data.temperature,
-            data.humidity,
-            data.hour,
-            data.totalMeterSignal,
-            data.ac1Power,
-            data.ac2Power,
-            data.ac3Power,
-            data.carBatteryPowerStatus
+    // ----- Gateway-submitted context (Zero-Trust envelope) -----
+    // Gateway calls this function on behalf of a device. The gateway must
+    // have GATEWAY_ROLE. The device signature is included so the contract can
+    // verify device authenticity and maintain per-device nonces while keeping
+    // the device identity out of public storage (i.e., the contract does not
+    // write the recovered device address to storage or emit it in events).
+    function setContextDataViaGateway(
+        ContextPayload calldata data,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external onlyRole(GATEWAY_ROLE) {
+        // Recreate signed hash the same way as device-signed submissions
+        bytes32 hash = keccak256(
+            abi.encode(
+                data.temperature,
+                data.humidity,
+                data.totalMeterSignal,
+                data.totalDevicesPowerValue,
+                data.hour,
+                data.ac1Power,
+                data.ac2Power,
+                data.ac3Power,
+                data.carBatteryPowerStatus,
+                data.nonce,
+                address(this)
+            )
         );
+        bytes32 prefixed = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+        address recovered = ecrecover(prefixed, v, r, s);
+        require(recovered != address(0), "invalid device signature");
+        require(authorizedDevice[recovered], "device not authorized");
+        require(nonces[recovered] == data.nonce, "invalid nonce");
+
+        // Zero-Trust only: do not validate or write contextual attributes.
+        // Advance nonce to prevent replays and emit a concise verification event.
+        nonces[recovered] = data.nonce + 1;
+        emit DeviceVerified();
     }
 
     // ----- Basic owner setter (optional) -----
@@ -174,6 +190,10 @@ contract ContextManager {
         uint _ac3Power,
         uint _carBatteryPowerStatus
     ) external onlyOwner {
+        // Validate sensible ranges for owner-set data as well
+        require(_temperature <= 100, "temperature out of range (0-100)");
+        require(_humidity <= 100, "humidity out of range (0-100)");
+
         temperature = _temperature;
         humidity = _humidity;
         hour = _hour;
@@ -184,16 +204,8 @@ contract ContextManager {
         carBatteryPowerStatus = _carBatteryPowerStatus;
         totalDevicesPowerValue = _totalDevicesPowerValue;
 
-        emit ContextUpdated(
-            _temperature,
-            _humidity,
-            _hour,
-            _totalMeterSignal,
-            _ac1Power,
-            _ac2Power,
-            _ac3Power,
-            _carBatteryPowerStatus
-        );
+        // emit a minimal verification/acknowledgement event (ContextUpdated removed)
+        emit DeviceVerified();
     }
 
     // ----- Getter -----

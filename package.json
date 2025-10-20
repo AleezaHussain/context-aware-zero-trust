@@ -8,7 +8,6 @@
   "dependencies": {
     "@ganache/cli": "^0.10.2",
     "ganache-core": "2.13.2",
-    "paillier-bigint": "^3.4.3",
     "solc": "^0.8.20",
     "web3": "1.10.0"
   }
