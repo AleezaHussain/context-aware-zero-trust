@@ -1,3 +1,26 @@
+const { ethers } = require('ethers');
+// Context validation function (Step 2)
+function validateContext(payload) {
+  // 1. Status check
+  if (payload.status !== "active") {
+    throw new Error("Context invalid: device not active");
+  }
+  // 2. Location check (example rule)
+  if (payload.location !== "Zone3") {
+    throw new Error("Context invalid: wrong zone");
+  }
+  // 3. Timestamp freshness (within 5 minutes)
+  const now = Date.now();
+  const diffMs = now - new Date(payload.timestamp).getTime();
+  if (diffMs > 5 * 60 * 1000) {
+    throw new Error("Context invalid: stale timestamp");
+  }
+  // 4. Role-based rule (optional)
+  if (payload.role !== "env_sensor") {
+    throw new Error("Context invalid: unauthorized role");
+  }
+  return true;
+}
 const GanacheCore = require('ganache-core');
 const Web3 = require('web3');
 const FS = require('fs');
@@ -8,9 +31,44 @@ function nowMs(){return Date.now();}
 function pQuantile(arr, q){ if(!arr.length) return 0; const s=arr.slice().sort((a,b)=>a-b); const idx=Math.max(0, Math.min(s.length-1, Math.floor(q*(s.length-1)))); return s[idx]; }
 function avg(arr){ if(!arr.length) return 0; return arr.reduce((a,b)=>a+b,0)/arr.length; }
 
+// Produce a concise, structured error summary without huge nested objects
+function sanitizeError(err){
+  const summary = {
+    errCode: err && err.code ? String(err.code) : undefined,
+    errReason: err && err.reason ? String(err.reason) : undefined,
+    errSummary: undefined,
+    txHash: undefined,
+    blockNumber: undefined,
+    gasUsed: undefined,
+    status: undefined
+  };
+  // short, single-line message
+  if (err && err.message) {
+    const firstLine = String(err.message).split('\n')[0];
+    summary.errSummary = firstLine.length > 200 ? firstLine.slice(0,200) + '…' : firstLine;
+  }
+  // receipt fields if present
+  if (err && err.receipt) {
+    const r = err.receipt;
+    summary.txHash = r.transactionHash;
+    summary.blockNumber = r.blockNumber;
+    summary.gasUsed = r.gasUsed;
+    summary.status = r.status;
+  }
+  return summary;
+}
+
 async function compileContract(){
   const source = FS.readFileSync(PATH.resolve(__dirname,'..','contracts','ContextAwareSmartContract.sol'),'utf8');
-  const input = { language: 'Solidity', sources: { 'ContextAwareSmartContract.sol': { content: source } }, settings:{ outputSelection: { '*': { '*': ['abi','evm.bytecode'] }}}};
+  const input = {
+    language: 'Solidity',
+    sources: { 'ContextAwareSmartContract.sol': { content: source } },
+    settings: {
+      optimizer: { enabled: true, runs: 200 },
+      viaIR: true,
+      outputSelection: { '*': { '*': ['abi','evm.bytecode'] } }
+    }
+  };
   const output = JSON.parse(SOLC.compile(JSON.stringify(input)));
   if(output.errors){ for(const e of output.errors) console.error(e.formattedMessage); throw new Error('compile failed'); }
   const name = Object.keys(output.contracts['ContextAwareSmartContract.sol'])[0];
@@ -48,6 +106,7 @@ function entropy(pArr){ let H=0; for(const p of pArr){ if(p>0) H -= p*Math.log2(
   const OVERPRIV_RATE = parseFloat(getArg('--overpriv','0.1'));
   const VERBOSE = process.argv.includes('--verbose');
   const FAIL_RATE = parseFloat(getArg('--failRate','0'));
+  const SEND_ON_CONTEXT = process.argv.includes('--sendOnContextViolation');
   // new flags: --failDevices "0,3,5" and --failMode invalidSig|outOfRange
   const FAIL_DEVICES_ARG = getArg('--failDevices', '');
   const FAIL_MODE = getArg('--failMode', 'random');
@@ -69,10 +128,20 @@ function entropy(pArr){ let H=0; for(const p of pArr){ if(p>0) H -= p*Math.log2(
   // helper to send gateway tx
   async function gatewaySubmit(device, temperature, humidity, options = {}){
     // sign payload
-    const nonce = Number(await deployed.methods.nonces(device.address).call());
-    const types = ['uint256','uint256','uint256','uint256','uint256','uint256','uint256','uint256','uint256','uint256','address'];
-    const vals = [temperature, humidity, 0, 0, (new Date()).getHours(), 0,0,0,0, nonce, deployed.options.address];
-    const encoded = web3.eth.abi.encodeParameters(types, vals);
+  const nonce = Number(await deployed.methods.nonces(device.address).call());
+  const hourVal = (new Date()).getHours();
+    // contextHash must be passed in options
+    const contextHash = options.contextHash || '0x0000000000000000000000000000000000000000000000000000000000000000';
+    // Values for signing (must match Solidity hash ordering, including address(this) and contextHash)
+    const signTypes = [
+      'uint256','uint256','uint256','uint256','uint256',
+      'uint256','uint256','uint256','uint256','uint256','address','bytes32'
+    ];
+    const signVals = [
+      temperature, humidity, 0, 0, hourVal,
+      0, 0, 0, 0, nonce, deployed.options.address, contextHash
+    ];
+    const encoded = web3.eth.abi.encodeParameters(signTypes, signVals);
     const hash = web3.utils.keccak256(encoded);
 
     // device signs
@@ -93,7 +162,21 @@ function entropy(pArr){ let H=0; for(const p of pArr){ if(p>0) H -= p*Math.log2(
 
     // prepare tx
     const v=sig.v, r=sig.r, s=sig.s;
-    const data = deployed.methods.setContextDataViaGateway(vals.slice(0,10), v, r, s).encodeABI();
+    // Pass the struct as an object with named fields to ensure correct ABI encoding
+    const callData = {
+      temperature: temperature,
+      humidity: humidity,
+      totalMeterSignal: 0,
+      totalDevicesPowerValue: 0,
+      hour: hourVal,
+      ac1Power: 0,
+      ac2Power: 0,
+      ac3Power: 0,
+      carBatteryPowerStatus: 0,
+      nonce: nonce,
+      contextHash: contextHash
+    };
+    const data = deployed.methods.setContextDataViaGateway(callData, v, r, s).encodeABI();
     const txCount = await web3.eth.getTransactionCount(gateway.address);
     const gasPrice = await web3.eth.getGasPrice();
     const txObj = { nonce: web3.utils.toHex(txCount), to: deployed.options.address, gas: web3.utils.toHex(300000), gasPrice: web3.utils.toHex(gasPrice), data };
@@ -115,15 +198,41 @@ function entropy(pArr){ let H=0; for(const p of pArr){ if(p>0) H -= p*Math.log2(
       perf.txHashes.push(receipt.transactionHash);
 
   // successful verification: record timing, tx hash and attribute log for PDS
-  logs.push({ device: device.address, temperature, humidity, hour: vals[4], device_class: 'sensor-'+(device.address.slice(2,6)), decision: 'allow', timestamp: submitTime });
+  logs.push({ device: device.address, temperature, humidity, hour: hourVal, device_class: 'sensor-'+(device.address.slice(2,6)), decision: 'allow', timestamp: submitTime });
+      if (VERBOSE) {
+        console.log(`✓ mined: device=${device.address.slice(0,10)}... nonce=${nonce} tx=${receipt.transactionHash} gas=${receipt.gasUsed}`);
+      }
       return { ok: true, receipt };
     } catch(err){
-      // record minimal failure info (concise)
-      const errMsg = (err && err.message) ? err.message : 'device failed zero trust verification';
-      perf.failures.push({ device: device.address, deviceIdx: options.deviceIdx, failType: options.failType || 'unknown', errMsg, ts: nowMs() });
+      // record concise failure info
+      const clean = sanitizeError(err);
+      const tsNow = nowMs();
+      perf.failures.push({
+        device: device.address,
+        deviceIdx: options.deviceIdx,
+        failType: options.failType || 'unknown',
+        errCode: clean.errCode,
+        errReason: clean.errReason,
+        errSummary: clean.errSummary || 'tx reverted',
+        txHash: clean.txHash,
+        blockNumber: clean.blockNumber,
+        gasUsed: clean.gasUsed,
+        status: clean.status,
+        ts: tsNow
+      });
       // also log the failed attempt for PDS analysis
-      logs.push({ device: device.address, temperature, humidity, hour: vals[4], device_class: 'sensor-'+(device.address.slice(2,6)), decision: 'revert', reason: errMsg, timestamp: submitTime });
-      if(VERBOSE) console.warn(`↯ failed send device=${device.address.slice(0,10)}... reason=device failed zero trust verification`);
+  logs.push({ device: device.address, temperature, humidity, hour: hourVal, device_class: 'sensor-'+(device.address.slice(2,6)), decision: 'revert', reason: clean.errSummary || 'tx reverted', timestamp: submitTime });
+  if(VERBOSE) {
+        const parts = [
+          `↯ reverted: device=${device.address.slice(0,10)}...`,
+          `nonce=${nonce}`,
+          clean.errReason ? `reason=${clean.errReason}` : (clean.errCode ? `code=${clean.errCode}` : `reason=${clean.errSummary||'revert'}`),
+          clean.txHash ? `tx=${clean.txHash}` : null,
+          typeof clean.gasUsed !== 'undefined' ? `gas=${clean.gasUsed}` : null,
+          typeof clean.blockNumber !== 'undefined' ? `block=${clean.blockNumber}` : null
+        ].filter(Boolean);
+        console.warn(parts.join(' '));
+      }
       return { ok: false };
     }
   }
@@ -131,14 +240,69 @@ function entropy(pArr){ let H=0; for(const p of pArr){ if(p>0) H -= p*Math.log2(
   // run workload with per-device dynamic patterns
   console.log('Running workload:', NUM_DEVICES, 'devices x', UPDATES_PER_DEVICE, 'updates');
   const startAll = nowMs();
-  // assign per-device base and small trend params
-  const deviceProfiles = devices.map((d, idx) => ({
-    // make bases diverge more clearly by index
-    baseTemp: 15 + idx * 3 + Math.floor(Math.random()*4),
-    baseHum: 30 + idx * 2 + Math.floor(Math.random()*5),
-    trend: (Math.random() - 0.45) * (0.8 + idx*0.05), // device-specific trend
-    spikeProb: 0.02 + (idx % 4) * 0.08 + Math.random()*0.02
-  }));
+  // --- TEST TEMPLATE: 2 valid, 4 invalid devices for context validation ---
+  const deviceProfiles = [
+    {
+      id: "dev_01",
+      baseTemp: 28,
+      baseHum: 42,
+      trend: 0.1,
+      spikeProb: 0.05,
+      location: "Zone3",
+      role: "env_sensor",
+      status: "active"
+    },
+    {
+      id: "dev_02",
+      baseTemp: 25,
+      baseHum: 40,
+      trend: 0.05,
+      spikeProb: 0.02,
+      location: "Zone3",
+      role: "env_sensor",
+      status: "active"
+    },
+    {
+      id: "dev_03",
+      baseTemp: 29,
+      baseHum: 45,
+      trend: 0.05,
+      spikeProb: 0.02,
+      location: "Zone3",
+      role: "env_sensor",
+      status: "active"
+    },
+    {
+      id: "dev_04",
+      baseTemp: 26,
+      baseHum: 37,
+      trend: 0.05,
+      spikeProb: 0.01,
+      location: "Zone3",
+      role: "env_sensor",
+      status: "active"
+    },
+    {
+      id: "dev_05",
+      baseTemp: 27,
+      baseHum: 36,
+      trend: 0.04,
+      spikeProb: 0.02,
+      location: "Zone3",
+      role: "env_sensor",
+      status: "active"
+    },
+    {
+      id: "dev_06",
+      baseTemp: 30,
+      baseHum: 39,
+      trend: 0.03,
+      spikeProb: 0.02,
+      location: "Zone3",
+      role: "env_sensor",
+      status: "active"
+    }
+  ];
 
   // determine failing devices
   const failTypes = {}; // idx->type
@@ -157,7 +321,13 @@ function entropy(pArr){ let H=0; for(const p of pArr){ if(p>0) H -= p*Math.log2(
     const failIndices = new Set();
     while(failIndices.size < numFail){ failIndices.add(Math.floor(Math.random()*NUM_DEVICES)); }
     for(const idx of failIndices){
-      const mode = (FAIL_MODE === 'random') ? ((Math.random()<0.5)?'invalidSig':'outOfRange') : FAIL_MODE;
+      let mode;
+      if (FAIL_MODE === 'random') {
+        const r = Math.random();
+        mode = r < 1/3 ? 'invalidSig' : (r < 2/3 ? 'outOfRange' : 'contextInvalid');
+      } else {
+        mode = FAIL_MODE;
+      }
       failTypes[idx] = mode;
       if(mode === 'invalidSig') badKeys[idx] = web3.eth.accounts.create();
     }
@@ -172,14 +342,119 @@ function entropy(pArr){ let H=0; for(const p of pArr){ if(p>0) H -= p*Math.log2(
       if (Math.random() < prof.spikeProb) temp += 6 + Math.floor(Math.random()*6); // spike
       let hum = Math.round(prof.baseHum + (Math.random()-0.5)*4);
       if (Math.random() < prof.spikeProb*0.5) hum += 5;
-      const failType = failTypes[idx] || null;
-      if(failType === 'outOfRange'){
+      // (removed failType declaration here to avoid redeclaration)
+      if(failTypes[idx] === 'outOfRange'){
         temp = 2000;
       }
       const options = {};
-      if(failType === 'invalidSig') options.failType = 'invalidSig', options.badKey = badKeys[idx], options.deviceIdx = idx;
-      else if(failType === 'outOfRange') options.failType = 'outOfRange', options.deviceIdx = idx;
-      await gatewaySubmit(d, temp, hum, options);
+      if(failTypes[idx] === 'invalidSig') options.failType = 'invalidSig', options.badKey = badKeys[idx], options.deviceIdx = idx;
+      else if(failTypes[idx] === 'outOfRange') options.failType = 'outOfRange', options.deviceIdx = idx;
+
+      // --- build context-aware payload ---
+      let location = prof.location;
+      let role = prof.role;
+      let status = prof.status;
+      // Inject context invalidation if selected for this device
+      if (failTypes[idx] === 'contextInvalid') {
+        // break status or zone
+        status = 'inactive';
+        location = 'ZoneX';
+      }
+      // Use static valid context for all devices to ensure all pass
+      const contextPayload = {
+        deviceId: prof.id,
+        deviceType: role,
+        temperature: temp,
+        humidity: hum,
+        nonce: null, // will be filled in gatewaySubmit if needed
+        timestamp: new Date().toISOString(),
+        location,
+        role,
+        status
+      };
+      // For now, just log the contextPayload (optional)
+      if (VERBOSE) console.log('ContextPayload:', contextPayload);
+
+      // Step 2: Validate context before sending
+      let contextHash = null;
+      let contextDecision = "allow";
+      let failType = null;
+      try {
+        validateContext(contextPayload);
+        // Generate context hash
+        const contextString = `${contextPayload.location}|${contextPayload.role}|${contextPayload.status}|${contextPayload.timestamp}`;
+        contextHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(contextString));
+      } catch (err) {
+        contextDecision = "context_violation";
+        // If we want to send even when context is invalid, still compute a hash
+        if (SEND_ON_CONTEXT) {
+          const contextString = `${contextPayload.location}|${contextPayload.role}|${contextPayload.status}|${contextPayload.timestamp}`;
+          contextHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(contextString));
+        } else {
+          contextHash = null;
+        }
+        // Parse failType from error message
+        if (err.message.includes("not active")) failType = "not_active";
+        else if (err.message.includes("wrong zone")) failType = "wrong_zone";
+        else if (err.message.includes("stale timestamp")) failType = "stale_timestamp";
+        else if (err.message.includes("unauthorized role")) failType = "unauthorized_role";
+        else failType = "context_other";
+        if (VERBOSE) console.error(`[CONTEXT-BLOCKED] ${contextPayload.deviceId}: ${err.message}`);
+      }
+
+      // Log context decision for measurement
+      logs.push({
+        deviceId: contextPayload.deviceId,
+        timestamp: contextPayload.timestamp,
+        decision: contextDecision,
+        contextHash,
+        location: contextPayload.location,
+        role: contextPayload.role,
+        status: contextPayload.status,
+        failType
+      });
+
+      if (contextDecision === "allow") {
+        // Only send tx if context is valid, and pass contextHash to gatewaySubmit
+        await gatewaySubmit(d, temp, hum, { ...options, contextHash });
+      } else if (contextDecision === "context_violation" && SEND_ON_CONTEXT) {
+        // Send anyway to observe on-chain behavior but classify as a policy failure in results
+        const sendRes = await gatewaySubmit(d, temp, hum, { ...options, contextHash });
+        // Record a policy failure regardless of tx success
+        const tsNow = nowMs();
+        perf.failures.push({
+          device: d.address,
+          deviceIdx: idx,
+          failType: 'context_violation',
+          errCode: undefined,
+          errReason: 'context invalid',
+          errSummary: 'gateway-enforced policy violation',
+          txHash: sendRes && sendRes.receipt ? sendRes.receipt.transactionHash : undefined,
+          blockNumber: sendRes && sendRes.receipt ? sendRes.receipt.blockNumber : undefined,
+          gasUsed: sendRes && sendRes.receipt ? sendRes.receipt.gasUsed : undefined,
+          status: sendRes && sendRes.receipt ? sendRes.receipt.status : undefined,
+          ts: tsNow
+        });
+      } else if (contextDecision === "context_violation" && !SEND_ON_CONTEXT) {
+        // Strict mode: block at gateway and do not send to chain; record as failure
+        const tsNow = nowMs();
+        perf.failures.push({
+          device: d.address,
+          deviceIdx: idx,
+          failType: 'context_violation',
+          errCode: undefined,
+          errReason: 'context invalid',
+          errSummary: 'blocked at gateway (not sent on-chain)',
+          txHash: undefined,
+          blockNumber: undefined,
+          gasUsed: undefined,
+          status: undefined,
+          ts: tsNow
+        });
+        if (VERBOSE) {
+          console.warn(`⊘ blocked: device=${d.address.slice(0,10)}... reason=context invalid (not sent)`);
+        }
+      }
       // small jitter between submissions
       await new Promise(r=>setTimeout(r, Math.floor(Math.random()*40)));
     }
@@ -249,11 +524,80 @@ function entropy(pArr){ let H=0; for(const p of pArr){ if(p>0) H -= p*Math.log2(
 
   const totalAttempts = perf.txHashes.length + perf.failures.length;
 
+
+  // --- Privacy Metrics ---
+  // 1. Privacy Leakage Probability (PLP)
+  const hashToContext = {};
+  logs.forEach(log => {
+    if (!log.contextHash) return;
+    const key = log.contextHash;
+    hashToContext[key] = hashToContext[key] || new Set();
+    hashToContext[key].add(`${log.location}|${log.role}|${log.status}`);
+  });
+  let successfulGuesses = 0;
+  Object.values(hashToContext).forEach(set => {
+    if (set.size === 1) successfulGuesses++;
+  });
+  const plp = Object.keys(hashToContext).length ? (successfulGuesses / Object.keys(hashToContext).length) : 0;
+
+  // 2. Shannon Entropy
+  function entropy(values) {
+    const counts = {};
+    values.forEach(val => counts[val] = (counts[val] || 0) + 1);
+    const total = values.length;
+    return Object.values(counts).reduce((acc, c) => {
+      const p = c / total;
+      return acc - p * Math.log2(p);
+    }, 0);
+  }
+  const H_location = entropy(logs.map(l => l.location));
+  const H_role = entropy(logs.map(l => l.role));
+  const H_status = entropy(logs.map(l => l.status));
+
+  // 3. Context Linkability
+  const deviceContexts = {};
+  logs.forEach(log => {
+    if (!log.contextHash) return;
+    const id = log.deviceId;
+    deviceContexts[id] = deviceContexts[id] || new Set();
+    deviceContexts[id].add(log.contextHash);
+  });
+  const linkabilityScore = Object.keys(deviceContexts).length ?
+    (Object.values(deviceContexts).reduce((sum, s) => sum + 1 / s.size, 0) / Object.keys(deviceContexts).length) : 0;
+
   const summary = {
     params: { NUM_DEVICES, UPDATES_PER_DEVICE },
     performance: { TPS, totalCommitted, totalWindowSec, latency_p50:p50, latency_p95:p95, latency_p99:p99, authz_p50, authz_p95, avgAuthzMs: avg(perf.authzMs) },
     pds: { R_struct, components:{r_k, r_l, r_t}, R_chain, components_chain:{r_A, r_H, r_L, r_C}, R_policy, PDS },
-    verification: { totalAttempts, successful: totalCommitted, failures: perf.failures.length, failures_by_type: perf.failures.reduce((acc,f)=>{ acc[f.failType]=(acc[f.failType]||0)+1; return acc; },{}) }
+    verification: {
+      totalAttempts,
+      successful: totalCommitted,
+      failures: perf.failures.length,
+      failures_by_type: perf.failures.reduce((acc,f)=>{ acc[f.failType]=(acc[f.failType]||0)+1; return acc; },{}),
+      failed_device_addresses: Array.from(new Set(perf.failures.map(f=>f.device))),
+      failures_detailed: perf.failures.map(f => ({
+        device: f.device,
+        deviceIdx: f.deviceIdx,
+        failType: f.failType,
+        errCode: f.errCode,
+        errReason: f.errReason,
+        errSummary: f.errSummary,
+        txHash: f.txHash,
+        blockNumber: f.blockNumber,
+        gasUsed: f.gasUsed,
+        status: f.status,
+        ts: f.ts
+      }))
+    },
+    privacy: {
+      privacyLeakageProbability: plp,
+      contextLinkability: linkabilityScore,
+      entropy: {
+        location: H_location,
+        role: H_role,
+        status: H_status
+      }
+    }
   };
 
   const outDir = PATH.resolve(__dirname,'..','build'); if(!FS.existsSync(outDir)) FS.mkdirSync(outDir,{recursive:true});

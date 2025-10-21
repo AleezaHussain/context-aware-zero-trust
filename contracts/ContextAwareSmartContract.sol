@@ -39,6 +39,12 @@ contract ContextManager {
     event DeviceAuthorized(address device);
     event DeviceDeauthorized(address device);
 
+    // --- Step 3: Context events ---
+    event ContextUpdated(address indexed device, bytes32 contextHash, uint256 timestamp);
+    event ContextViolation(address indexed device, string reason, uint256 timestamp);
+    // --- Step 3: Context state ---
+    mapping(address => bytes32) public lastContext;
+
     // ----- Constructor -----
     constructor() {
         owner = msg.sender;
@@ -89,16 +95,17 @@ contract ContextManager {
 
     // ----- Struct to fix stack depth -----
     struct ContextPayload {
-        uint temperature;
-        uint humidity;
-        uint totalMeterSignal;
-        uint totalDevicesPowerValue;
-        uint hour;
-        uint ac1Power;
-        uint ac2Power;
-        uint ac3Power;
-        uint carBatteryPowerStatus;
-        uint nonce;
+    uint temperature;
+    uint humidity;
+    uint totalMeterSignal;
+    uint totalDevicesPowerValue;
+    uint hour;
+    uint ac1Power;
+    uint ac2Power;
+    uint ac3Power;
+    uint carBatteryPowerStatus;
+    uint nonce;
+    bytes32 contextHash; // Step 3: add contextHash to payload
     }
 
     // ----- Signed Context Submission -----
@@ -121,7 +128,8 @@ contract ContextManager {
                 data.ac3Power,
                 data.carBatteryPowerStatus,
                 data.nonce,
-                address(this)
+                address(this),
+                data.contextHash
             )
         );
 
@@ -163,7 +171,8 @@ contract ContextManager {
                 data.ac3Power,
                 data.carBatteryPowerStatus,
                 data.nonce,
-                address(this)
+                address(this),
+                data.contextHash
             )
         );
         bytes32 prefixed = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
@@ -172,7 +181,15 @@ contract ContextManager {
         require(authorizedDevice[recovered], "device not authorized");
         require(nonces[recovered] == data.nonce, "invalid nonce");
 
-        // Zero-Trust only: do not validate or write contextual attributes.
+        // --- Step 3: Context deviation check ---
+        if (lastContext[recovered] != bytes32(0) && lastContext[recovered] != data.contextHash) {
+            emit ContextViolation(recovered, "Context deviation detected", block.timestamp);
+        }
+        // Update stored context hash
+        lastContext[recovered] = data.contextHash;
+        // Emit context update event
+        emit ContextUpdated(recovered, data.contextHash, block.timestamp);
+
         // Advance nonce to prevent replays and emit a concise verification event.
         nonces[recovered] = data.nonce + 1;
         emit DeviceVerified();

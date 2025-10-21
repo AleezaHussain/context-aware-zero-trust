@@ -4,39 +4,48 @@
     "UPDATES_PER_DEVICE": 3
   },
   "performance": {
-    "TPS": 3.3351862145636466,
-    "totalCommitted": 12,
-    "totalWindowSec": 3.598,
-    "latency_p50": 91,
-    "latency_p95": 99,
-    "latency_p99": 99,
-    "authz_p50": 16,
+    "TPS": 5.436424041075204,
+    "totalCommitted": 18,
+    "totalWindowSec": 3.311,
+    "latency_p50": 74,
+    "latency_p95": 91,
+    "latency_p99": 91,
+    "authz_p50": 14,
     "authz_p95": 26,
-    "avgAuthzMs": 17.944444444444443
+    "avgAuthzMs": 15.944444444444445
   },
   "pds": {
-    "R_struct": 0.6333333333333333,
+    "R_struct": 0.43333333333333335,
     "components": {
       "r_k": 0.3333333333333333,
       "r_l": 1,
-      "r_t": 0.6666666666666667
+      "r_t": 0
     },
-    "R_chain": 0.17222222222222222,
+    "R_chain": 0.4823634282077873,
     "components_chain": {
       "r_A": 0.16666666666666666,
-      "r_H": 0,
-      "r_L": 0.1111111111111111,
+      "r_H": 0.7892419038528016,
+      "r_L": 0.08333333333333333,
       "r_C": 1
     },
-    "R_policy": 0.41999999999999993,
-    "PDS": 0.36011111111111105
+    "R_policy": 0.30000000000000004,
+    "PDS": 0.43118171410389367
   },
   "verification": {
     "totalAttempts": 18,
-    "successful": 12,
-    "failures": 6,
-    "failures_by_type": {
-      "invalidSig": 6
+    "successful": 18,
+    "failures": 0,
+    "failures_by_type": {},
+    "failed_device_addresses": [],
+    "failures_detailed": []
+  },
+  "privacy": {
+    "privacyLeakageProbability": 1,
+    "contextLinkability": 0.3333333333333333,
+    "entropy": {
+      "location": 1,
+      "role": 1,
+      "status": 1
     }
   }
 }
