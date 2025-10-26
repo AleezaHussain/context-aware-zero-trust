@@ -41,9 +41,15 @@ contract ContextManager {
 
     // --- Step 3: Context events ---
     event ContextUpdated(address indexed device, bytes32 contextHash, uint256 timestamp);
+    event MetricsCipherUpdated(address indexed device, bytes32 C_t);
+    event PolicyAttested(address indexed device, bytes32 C_t, bool ok, uint256 windowTag);
     event ContextViolation(address indexed device, string reason, uint256 timestamp);
     // --- Step 3: Context state ---
     mapping(address => bytes32) public lastContext;
+    // Store opaque ciphertext bundle (Paillier) per device (not raw numeric values)
+    mapping(address => bytes) public encMetrics;
+    // store IPE attribute ciphertext per device
+    mapping(address => bytes) public encAttrs;
 
     // ----- Constructor -----
     constructor() {
@@ -156,7 +162,8 @@ contract ContextManager {
         ContextPayload calldata data,
         uint8 v,
         bytes32 r,
-        bytes32 s
+        bytes32 s,
+        bytes calldata ctMetricsBlob
     ) external onlyRole(GATEWAY_ROLE) {
         // Recreate signed hash the same way as device-signed submissions
         bytes32 hash = keccak256(
@@ -187,13 +194,81 @@ contract ContextManager {
         }
         // Update stored context hash
         lastContext[recovered] = data.contextHash;
-        // Emit context update event
+        // Store ciphertext bundle (opaque bytes) for off-chain auditor
+        encMetrics[recovered] = ctMetricsBlob;
+        // Emit context update event and metrics event
         emit ContextUpdated(recovered, data.contextHash, block.timestamp);
+        emit MetricsCipherUpdated(recovered, data.contextHash);
 
         // Advance nonce to prevent replays and emit a concise verification event.
         nonces[recovered] = data.nonce + 1;
         emit DeviceVerified();
     }
+
+    // ----- Hybrid encrypted path: Gateway-attested IPE attributes -----
+    function setContextHybridEnc(
+        ContextPayload calldata data,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        bytes calldata ctMetricsBlob,
+        bytes calldata ctAttrBytes,
+        bool policy_ok,
+        uint8 vG,
+        bytes32 rG,
+        bytes32 sG,
+        uint256 windowTag
+    ) external onlyRole(GATEWAY_ROLE) {
+        // Verify device signature (same as other paths)
+        bytes32 hash = keccak256(
+            abi.encode(
+                data.temperature,
+                data.humidity,
+                data.totalMeterSignal,
+                data.totalDevicesPowerValue,
+                data.hour,
+                data.ac1Power,
+                data.ac2Power,
+                data.ac3Power,
+                data.carBatteryPowerStatus,
+                data.nonce,
+                address(this),
+                data.contextHash
+            )
+        );
+        bytes32 pref = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+        address recovered = ecrecover(pref, v, r, s);
+        require(recovered != address(0), "invalid device signature");
+        require(authorizedDevice[recovered], "device not authorized");
+        require(nonces[recovered] == data.nonce, "invalid nonce");
+
+        // Verify gateway attestation signature over (C_t, policy_ok, windowTag)
+        bytes32 digest = keccak256(abi.encode(data.contextHash, policy_ok, windowTag));
+        bytes32 prefG = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", digest));
+        address gw = ecrecover(prefG, vG, rG, sG);
+        require(gw != address(0) && roles[GATEWAY_ROLE][gw], "bad gateway attest");
+
+        // Enforce policy strictly (could be audit-only if you prefer)
+        require(policy_ok, "policy fail");
+
+        // store ciphertext bundles
+        encMetrics[recovered] = ctMetricsBlob;
+        encAttrs[recovered] = ctAttrBytes;
+
+        // update commit and emit events
+        if (lastContext[recovered] != bytes32(0) && lastContext[recovered] != data.contextHash) {
+            emit ContextViolation(recovered, "Context deviation detected", block.timestamp);
+        }
+        lastContext[recovered] = data.contextHash;
+        emit ContextUpdated(recovered, data.contextHash, block.timestamp);
+        emit MetricsCipherUpdated(recovered, data.contextHash);
+        emit PolicyAttested(recovered, data.contextHash, policy_ok, windowTag);
+
+        nonces[recovered] = data.nonce + 1;
+        emit DeviceVerified();
+    }
+
+    
 
     // ----- Basic owner setter (optional) -----
     function setContextData(
