@@ -1,0 +1,131 @@
+{
+  "params": {
+    "NUM_DEVICES": 6,
+    "UPDATES_PER_DEVICE": 3
+  },
+  "performance": {
+    "TPS": 1.3799448022079117,
+    "totalCommitted": 12,
+    "totalWindowSec": 8.696,
+    "latency_p50": 371,
+    "latency_p95": 431,
+    "latency_p99": 431,
+    "authz_p50": 17,
+    "authz_p95": 23,
+    "avgAuthzMs": 18.916666666666668,
+    "t_HE_enc_avg": null,
+    "t_IPE_enc_avg": null,
+    "t_proof_gen_avg": null,
+    "latency_components": {
+      "L_auth": 18.916666666666668,
+      "L_enc": 0,
+      "L_proof": 0,
+      "L_mine": 374.0833333333333
+    },
+    "L_bar": 393
+  },
+  "pds": {
+    "R_struct": 0.49333333333333335,
+    "components": {
+      "r_k": 0.3333333333333333,
+      "r_l": 1,
+      "r_t": 0.19999999999999998
+    },
+    "R_chain": 0.35896633050030485,
+    "components_chain": {
+      "r_A": 0.16666666666666666,
+      "r_H": 0.6890824929174288,
+      "r_L": 0.16666666666666666,
+      "r_C": 0
+    },
+    "R_policy": 0.33599999999999997,
+    "PDS": 0.3946831652501524,
+    "PDS_reliability": 0.4758249159584095,
+    "PDS_risk": 0.5241750840415905
+  },
+  "verification": {
+    "totalAttempts": 18,
+    "successful": 12,
+    "failures": 6,
+    "failures_by_type": {
+      "context_violation": 6
+    },
+    "failed_device_addresses": [
+      "0xe8E90F2658714Fbf76449ff9038526bf30cf1889",
+      "0x31805587725C83a29784E5a88e2CF86f2a32A425"
+    ],
+    "failures_detailed": [
+      {
+        "device": "0xe8E90F2658714Fbf76449ff9038526bf30cf1889",
+        "deviceIdx": 0,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762155546709
+      },
+      {
+        "device": "0x31805587725C83a29784E5a88e2CF86f2a32A425",
+        "deviceIdx": 3,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762155548441
+      },
+      {
+        "device": "0xe8E90F2658714Fbf76449ff9038526bf30cf1889",
+        "deviceIdx": 0,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762155549903
+      },
+      {
+        "device": "0x31805587725C83a29784E5a88e2CF86f2a32A425",
+        "deviceIdx": 3,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762155551288
+      },
+      {
+        "device": "0xe8E90F2658714Fbf76449ff9038526bf30cf1889",
+        "deviceIdx": 0,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762155552622
+      },
+      {
+        "device": "0x31805587725C83a29784E5a88e2CF86f2a32A425",
+        "deviceIdx": 3,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762155554088
+      }
+    ]
+  },
+  "privacy": {
+    "privacyLeakageProbability": 1,
+    "privacyLeakageProbability_model": 0.28500000000000003,
+    "contextLinkability": 0.3333333333333333,
+    "contextLinkability_model": 0.25,
+    "entropy": {
+      "location": 1.5219280948873621,
+      "role": 0.9709505944546686,
+      "status": 1.5219280948873621
+    }
+  },
+  "crypto": {
+    "t_IPE_ms": [],
+    "t_HE_enc_ms": [],
+    "t_proof_gen_ms": [],
+    "gas_verify": [],
+    "t_HE_enc_ms_last": null,
+    "ct_numeric_bytes_last": null
+  },
+  "attestations": {
+    "count": 0,
+    "invalid": 0
+  }
+}

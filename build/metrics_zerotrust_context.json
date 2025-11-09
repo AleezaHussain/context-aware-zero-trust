@@ -1,0 +1,224 @@
+{
+  "params": {
+    "NUM_DEVICES": 6,
+    "UPDATES_PER_DEVICE": 3
+  },
+  "performance": {
+    "TPS": 0,
+    "totalCommitted": 0,
+    "totalWindowSec": 34.179,
+    "latency_p50": 0,
+    "latency_p95": 0,
+    "latency_p99": 0,
+    "authz_p50": 19,
+    "authz_p95": 47,
+    "avgAuthzMs": 23.416666666666668,
+    "t_HE_enc_avg": 1708.6666666666667,
+    "t_IPE_enc_avg": null,
+    "t_proof_gen_avg": null,
+    "latency_components": {
+      "L_auth": 23.416666666666668,
+      "L_enc": 1708.6666666666667,
+      "L_proof": 0,
+      "L_mine": 0
+    },
+    "L_bar": 1732.0833333333335
+  },
+  "pds": {
+    "R_struct": 0.6133333333333334,
+    "components": {
+      "r_k": 0.3333333333333333,
+      "r_l": 1,
+      "r_t": 0.6000000000000001
+    },
+    "R_chain": 0.34563299716697155,
+    "components_chain": {
+      "r_A": 0.16666666666666666,
+      "r_H": 0.6890824929174288,
+      "r_L": 0.1,
+      "r_C": 0
+    },
+    "R_policy": 0.40800000000000003,
+    "PDS": 0.4384164985834858,
+    "PDS_reliability": 0.5204915826250762,
+    "PDS_risk": 0.4795084173749238
+  },
+  "verification": {
+    "totalAttempts": 18,
+    "successful": 0,
+    "failures": 18,
+    "failures_by_type": {
+      "context_violation": 6,
+      "unknown": 12
+    },
+    "failed_device_addresses": [
+      "0xf3e18084cf543CadB5aa060b6D177cB41138DD95",
+      "0x6c073EeDB2b29c1Aa02F2FC7e8F6C0c80568d208",
+      "0x7798384723dd092295780100d0569e0D1cbf745C",
+      "0x3497fA0302fc8A49cAc1bd2fE461664d6e38c06D",
+      "0x2c47043c17de5d9DBadD528242DD1df2d849d4A7",
+      "0x80585ee2aAa95854a632fbEC1325d973D76dc3e3"
+    ],
+    "failures_detailed": [
+      {
+        "device": "0xf3e18084cf543CadB5aa060b6D177cB41138DD95",
+        "deviceIdx": 0,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762154487775
+      },
+      {
+        "device": "0x6c073EeDB2b29c1Aa02F2FC7e8F6C0c80568d208",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154490745
+      },
+      {
+        "device": "0x7798384723dd092295780100d0569e0D1cbf745C",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154493255
+      },
+      {
+        "device": "0x3497fA0302fc8A49cAc1bd2fE461664d6e38c06D",
+        "deviceIdx": 3,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762154493292
+      },
+      {
+        "device": "0x2c47043c17de5d9DBadD528242DD1df2d849d4A7",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154495938
+      },
+      {
+        "device": "0x80585ee2aAa95854a632fbEC1325d973D76dc3e3",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154498410
+      },
+      {
+        "device": "0xf3e18084cf543CadB5aa060b6D177cB41138DD95",
+        "deviceIdx": 0,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762154498426
+      },
+      {
+        "device": "0x6c073EeDB2b29c1Aa02F2FC7e8F6C0c80568d208",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154500808
+      },
+      {
+        "device": "0x7798384723dd092295780100d0569e0D1cbf745C",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154503573
+      },
+      {
+        "device": "0x3497fA0302fc8A49cAc1bd2fE461664d6e38c06D",
+        "deviceIdx": 3,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762154503589
+      },
+      {
+        "device": "0x2c47043c17de5d9DBadD528242DD1df2d849d4A7",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154506619
+      },
+      {
+        "device": "0x80585ee2aAa95854a632fbEC1325d973D76dc3e3",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154510247
+      },
+      {
+        "device": "0xf3e18084cf543CadB5aa060b6D177cB41138DD95",
+        "deviceIdx": 0,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762154510283
+      },
+      {
+        "device": "0x6c073EeDB2b29c1Aa02F2FC7e8F6C0c80568d208",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154512966
+      },
+      {
+        "device": "0x7798384723dd092295780100d0569e0D1cbf745C",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154516140
+      },
+      {
+        "device": "0x3497fA0302fc8A49cAc1bd2fE461664d6e38c06D",
+        "deviceIdx": 3,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762154516173
+      },
+      {
+        "device": "0x2c47043c17de5d9DBadD528242DD1df2d849d4A7",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154518602
+      },
+      {
+        "device": "0x80585ee2aAa95854a632fbEC1325d973D76dc3e3",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154521907
+      }
+    ]
+  },
+  "privacy": {
+    "privacyLeakageProbability": 1,
+    "privacyLeakageProbability_model": 0.28500000000000003,
+    "contextLinkability": 0.3333333333333333,
+    "contextLinkability_model": 0.25,
+    "entropy": {
+      "location": 1.5219280948873621,
+      "role": 0.9709505944546686,
+      "status": 1.5219280948873621
+    }
+  },
+  "crypto": {
+    "t_IPE_ms": [],
+    "t_HE_enc_ms": [
+      1923,
+      1205,
+      1593,
+      1256,
+      1303,
+      1582,
+      2055,
+      2475,
+      1443,
+      1928,
+      1513,
+      2228
+    ],
+    "t_proof_gen_ms": [],
+    "gas_verify": [],
+    "t_HE_enc_ms_last": 2228,
+    "ct_numeric_bytes_last": 512,
+    "t_HE_enc_ms_p50": 1582,
+    "t_HE_enc_ms_p95": 2228,
+    "t_HE_enc_ms_avg": 1708.6666666666667
+  },
+  "attestations": {
+    "count": 0,
+    "invalid": 0
+  }
+}

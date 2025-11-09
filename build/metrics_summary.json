@@ -4,111 +4,57 @@
     "UPDATES_PER_DEVICE": 3
   },
   "performance": {
-    "TPS": 0.4072352122713544,
-    "totalCommitted": 12,
-    "totalWindowSec": 29.467,
-    "latency_p50": 594,
-    "latency_p95": 664,
-    "latency_p99": 664,
+    "TPS": 0.5066283880773452,
+    "totalCommitted": 18,
+    "totalWindowSec": 35.529,
+    "latency_p50": 386,
+    "latency_p95": 658,
+    "latency_p99": 658,
     "authz_p50": 0,
     "authz_p95": 0,
     "avgAuthzMs": 0,
-    "t_HE_enc_avg": 1125.8333333333333,
-    "t_IPE_enc_avg": 0.16666666666666666,
+    "t_HE_enc_avg": 1395.5,
+    "t_IPE_enc_avg": 0.05555555555555555,
     "t_proof_gen_avg": null,
     "latency_components": {
       "L_auth": 0,
-      "L_enc": 1126,
+      "L_enc": 1395.5555555555557,
       "L_proof": 0,
       "L_mine": 0
     },
-    "L_bar": 1126
+    "L_bar": 1395.5555555555557
   },
   "pds": {
-    "R_struct": 0.6833333333333333,
+    "R_struct": 0.43333333333333335,
     "components": {
       "r_k": 0.3333333333333333,
       "r_l": 1,
-      "r_t": 0.8333333333333334
+      "r_t": 0
     },
-    "R_chain": 0.4768078726522318,
+    "R_chain": 0.47125231709667614,
     "components_chain": {
       "r_A": 0.16666666666666666,
       "r_H": 0.7892419038528016,
-      "r_L": 0.05555555555555555,
+      "r_L": 0.027777777777777776,
       "r_C": 1
     },
-    "R_policy": 0.49,
-    "PDS": 0.5414039363261158,
-    "PDS_reliability": 0.5912853014963912,
-    "PDS_risk": 0.40871469850360875
+    "R_policy": 0.34,
+    "PDS": 0.4336261585483381,
+    "PDS_reliability": 0.4898964126075024,
+    "PDS_risk": 0.5101035873924976
   },
   "verification": {
     "totalAttempts": 18,
-    "successful": 12,
-    "failures": 6,
-    "failures_by_type": {
-      "tx": 6
-    },
-    "failed_device_addresses": [
-      "0x989C08Cbf00Dffd05713eCD7AFc4AF7560A2987D",
-      "0xbF0179DBE3fe1bC0222bC2221A4268A1231c520a"
-    ],
-    "failures_detailed": [
-      {
-        "device": "0x989C08Cbf00Dffd05713eCD7AFc4AF7560A2987D",
-        "deviceIdx": 0,
-        "failType": "tx",
-        "errSummary": "Transaction has been reverted by the EVM:",
-        "txHash": "0x6b54abfd8ed1f8f448d5616f7584d961d9fce28f3af9087454aea9654b32a84a",
-        "ts": 1761471367037
-      },
-      {
-        "device": "0xbF0179DBE3fe1bC0222bC2221A4268A1231c520a",
-        "deviceIdx": 3,
-        "failType": "tx",
-        "errSummary": "Transaction has been reverted by the EVM:",
-        "txHash": "0x77d03e692a4a1888113090a8248cc9261ff0ba77ac3ae5b9693564480d72cd06",
-        "ts": 1761471372102
-      },
-      {
-        "device": "0x989C08Cbf00Dffd05713eCD7AFc4AF7560A2987D",
-        "deviceIdx": 0,
-        "failType": "tx",
-        "errSummary": "Transaction has been reverted by the EVM:",
-        "txHash": "0x72fc61164a93e8f1d0e42f8f30efe7f66bc26569a1e892db4b4fe14720653b7e",
-        "ts": 1761471376814
-      },
-      {
-        "device": "0xbF0179DBE3fe1bC0222bC2221A4268A1231c520a",
-        "deviceIdx": 3,
-        "failType": "tx",
-        "errSummary": "Transaction has been reverted by the EVM:",
-        "txHash": "0x039abac4da60748d4ed2cf461ac0386b9f631c31cba217c679a60444b8ee871a",
-        "ts": 1761471381239
-      },
-      {
-        "device": "0x989C08Cbf00Dffd05713eCD7AFc4AF7560A2987D",
-        "deviceIdx": 0,
-        "failType": "tx",
-        "errSummary": "Transaction has been reverted by the EVM:",
-        "txHash": "0x168c0029e4ac7a1787096216334fea3b6057d11725642d90c5a604d6add7bf59",
-        "ts": 1761471386779
-      },
-      {
-        "device": "0xbF0179DBE3fe1bC0222bC2221A4268A1231c520a",
-        "deviceIdx": 3,
-        "failType": "tx",
-        "errSummary": "Transaction has been reverted by the EVM:",
-        "txHash": "0xd63651accff2b24c09236efa8396f53c80db906b43d66fa172a57df897089a7b",
-        "ts": 1761471391438
-      }
-    ]
+    "successful": 18,
+    "failures": 0,
+    "failures_by_type": {},
+    "failed_device_addresses": [],
+    "failures_detailed": []
   },
   "privacy": {
     "privacyLeakageProbability": 1,
     "privacyLeakageProbability_model": 0.28500000000000003,
-    "contextLinkability": 0.08333333333333333,
+    "contextLinkability": 0.05555555555555555,
     "contextLinkability_model": 0.25,
     "entropy": {
       "location": 1,
@@ -118,10 +64,6 @@
   },
   "crypto": {
     "t_IPE_ms": [
-      1,
-      0,
-      0,
-      1,
       0,
       0,
       0,
@@ -132,54 +74,64 @@
       0,
       0,
       0,
-      1,
       0,
       0,
-      0
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
     ],
     "t_HE_enc_ms": [
-      950,
-      853,
-      1332,
-      1432,
-      1188,
-      951,
-      1143,
-      990,
-      916,
-      1076,
-      1438,
-      1327,
-      1121,
-      1409,
-      918,
-      972,
-      1025,
-      1224
+      1796,
+      1276,
+      1239,
+      1680,
+      1712,
+      1120,
+      1129,
+      1204,
+      1318,
+      1876,
+      1309,
+      1511,
+      1603,
+      1244,
+      1163,
+      1220,
+      1363,
+      1356
     ],
     "t_proof_gen_ms": [],
     "gas_verify": [
       1635876,
-      1635876,
-      1635876,
+      1635864,
+      1635864,
       1635888,
+      1635876,
+      1635852,
       435887,
+      438699,
+      438687,
       435887,
+      438699,
+      438675,
+      435887,
+      435875,
+      438675,
+      435875,
       435899,
-      435899,
-      435899,
-      438651,
-      435899,
-      435887
+      438687
     ],
-    "t_HE_enc_ms_last": 1224,
+    "t_HE_enc_ms_last": 1356,
     "ct_numeric_bytes_last": 2059,
     "t_IPE_ms_p50": 0,
-    "t_IPE_ms_p95": 1,
-    "t_HE_enc_ms_p50": 1076,
-    "t_HE_enc_ms_p95": 1432,
-    "t_HE_enc_ms_avg": 1125.8333333333333,
-    "gas_verify_avg": 836118.6666666666
+    "t_IPE_ms_p95": 0,
+    "t_HE_enc_ms_p50": 1309,
+    "t_HE_enc_ms_p95": 1796,
+    "t_HE_enc_ms_avg": 1395.5,
+    "gas_verify_avg": 836814
   },
   "attestations": {
     "count": 18,

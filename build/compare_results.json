@@ -1,0 +1,31 @@
+{
+  "files": [
+    {
+      "path": "D:\\aleezafyp\\context-aware-smart-contract\\build\\metrics_zerotrust_clean.json",
+      "TPS": 1.056524035921817,
+      "latency_p50": 397,
+      "latency_p95": 430,
+      "t_HE_enc_avg": null,
+      "t_IPE_enc_avg": null,
+      "PDS": 0.48618171410389366
+    },
+    {
+      "path": "D:\\aleezafyp\\context-aware-smart-contract\\build\\metrics_zerotrust_context_clean.json",
+      "TPS": 1.3799448022079117,
+      "latency_p50": 371,
+      "latency_p95": 431,
+      "t_HE_enc_avg": null,
+      "t_IPE_enc_avg": null,
+      "PDS": 0.3946831652501524
+    },
+    {
+      "path": "D:\\aleezafyp\\context-aware-smart-contract\\build\\metrics_zerotrust_context_privacy.json",
+      "TPS": 0.13190581924505904,
+      "latency_p50": 4989,
+      "latency_p95": 5625,
+      "t_HE_enc_avg": 1244.5,
+      "t_IPE_enc_avg": 0.05555555555555555,
+      "PDS": 0.5414039363261158
+    }
+  ]
+}

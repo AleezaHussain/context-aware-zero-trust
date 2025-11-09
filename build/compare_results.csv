@@ -1,0 +1,4 @@
+file,TPS,latency_p50_ms,latency_p95_ms,t_HE_enc_avg_ms,t_IPE_enc_avg_ms,PDS
+metrics_zerotrust_clean.json,1.056524035921817,397,430,,,0.48618171410389366
+metrics_zerotrust_context_clean.json,1.3799448022079117,371,431,,,0.3946831652501524
+metrics_zerotrust_context_privacy.json,0.13190581924505904,4989,5625,1245,0.05555555555555555,0.5414039363261158

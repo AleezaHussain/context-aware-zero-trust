@@ -1,0 +1,125 @@
+{
+  "params": {
+    "NUM_DEVICES": 6,
+    "UPDATES_PER_DEVICE": 3
+  },
+  "performance": {
+    "TPS": 1.056524035921817,
+    "totalCommitted": 12,
+    "totalWindowSec": 11.358,
+    "latency_p50": 397,
+    "latency_p95": 430,
+    "latency_p99": 430,
+    "authz_p50": 15,
+    "authz_p95": 25,
+    "avgAuthzMs": 17.166666666666668,
+    "t_HE_enc_avg": null,
+    "t_IPE_enc_avg": null,
+    "t_proof_gen_avg": null,
+    "latency_components": {
+      "L_auth": 17.166666666666668,
+      "L_enc": 0,
+      "L_proof": 0,
+      "L_mine": 361.5
+    },
+    "L_bar": 378.6666666666667
+  },
+  "pds": {
+    "R_struct": 0.6833333333333333,
+    "components": {
+      "r_k": 0.3333333333333333,
+      "r_l": 1,
+      "r_t": 0.8333333333333334
+    },
+    "R_chain": 0.3823634282077873,
+    "components_chain": {
+      "r_A": 0.16666666666666666,
+      "r_H": 0.7892419038528016,
+      "r_L": 0.08333333333333333,
+      "r_C": 0
+    },
+    "R_policy": 0.44999999999999996,
+    "PDS": 0.48618171410389366,
+    "PDS_reliability": 0.5576741903852801,
+    "PDS_risk": 0.4423258096147199
+  },
+  "verification": {
+    "totalAttempts": 18,
+    "successful": 12,
+    "failures": 6,
+    "failures_by_type": {
+      "invalidSig": 6
+    },
+    "failed_device_addresses": [
+      "0x1282b86Bccb3cd22F7be619A1b66A5BfAb9306a0",
+      "0xB34dbb283dA922580d583c33Fc12630C1355a5C2"
+    ],
+    "failures_detailed": [
+      {
+        "device": "0x1282b86Bccb3cd22F7be619A1b66A5BfAb9306a0",
+        "deviceIdx": 0,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762155454384
+      },
+      {
+        "device": "0xB34dbb283dA922580d583c33Fc12630C1355a5C2",
+        "deviceIdx": 3,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762155456066
+      },
+      {
+        "device": "0x1282b86Bccb3cd22F7be619A1b66A5BfAb9306a0",
+        "deviceIdx": 0,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762155457853
+      },
+      {
+        "device": "0xB34dbb283dA922580d583c33Fc12630C1355a5C2",
+        "deviceIdx": 3,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762155459771
+      },
+      {
+        "device": "0x1282b86Bccb3cd22F7be619A1b66A5BfAb9306a0",
+        "deviceIdx": 0,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762155461690
+      },
+      {
+        "device": "0xB34dbb283dA922580d583c33Fc12630C1355a5C2",
+        "deviceIdx": 3,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762155463687
+      }
+    ]
+  },
+  "privacy": {
+    "privacyLeakageProbability": 1,
+    "privacyLeakageProbability_model": 0.28500000000000003,
+    "contextLinkability": 0.3333333333333333,
+    "contextLinkability_model": 0.25,
+    "entropy": {
+      "location": 1,
+      "role": 1,
+      "status": 1
+    }
+  },
+  "crypto": {
+    "t_IPE_ms": [],
+    "t_HE_enc_ms": [],
+    "t_proof_gen_ms": [],
+    "gas_verify": [],
+    "t_HE_enc_ms_last": null,
+    "ct_numeric_bytes_last": null
+  },
+  "attestations": {
+    "count": 0,
+    "invalid": 0
+  }
+}

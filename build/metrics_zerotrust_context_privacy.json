@@ -1,0 +1,182 @@
+{
+  "params": {
+    "NUM_DEVICES": 6,
+    "UPDATES_PER_DEVICE": 3
+  },
+  "performance": {
+    "TPS": 0.13190581924505904,
+    "totalCommitted": 12,
+    "totalWindowSec": 90.974,
+    "latency_p50": 4989,
+    "latency_p95": 5625,
+    "latency_p99": 5625,
+    "authz_p50": 0,
+    "authz_p95": 0,
+    "avgAuthzMs": 0,
+    "t_HE_enc_avg": 1244.5,
+    "t_IPE_enc_avg": 0.05555555555555555,
+    "t_proof_gen_avg": null,
+    "latency_components": {
+      "L_auth": 0,
+      "L_enc": 1244.5555555555557,
+      "L_proof": 0,
+      "L_mine": 3903.6944444444443
+    },
+    "L_bar": 5148.25
+  },
+  "pds": {
+    "R_struct": 0.6833333333333333,
+    "components": {
+      "r_k": 0.3333333333333333,
+      "r_l": 1,
+      "r_t": 0.8333333333333334
+    },
+    "R_chain": 0.4768078726522318,
+    "components_chain": {
+      "r_A": 0.16666666666666666,
+      "r_H": 0.7892419038528016,
+      "r_L": 0.05555555555555555,
+      "r_C": 1
+    },
+    "R_policy": 0.49,
+    "PDS": 0.5414039363261158,
+    "PDS_reliability": 0.5912853014963912,
+    "PDS_risk": 0.40871469850360875
+  },
+  "verification": {
+    "totalAttempts": 18,
+    "successful": 12,
+    "failures": 6,
+    "failures_by_type": {
+      "tx": 6
+    },
+    "failed_device_addresses": [
+      "0x0B83D5D8025765E3B7019C517900C18df004Be84",
+      "0xe2acEA50d252F2BFF74b54c5767c4Ff5699647cf"
+    ],
+    "failures_detailed": [
+      {
+        "device": "0x0B83D5D8025765E3B7019C517900C18df004Be84",
+        "deviceIdx": 0,
+        "failType": "tx",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762154953887
+      },
+      {
+        "device": "0xe2acEA50d252F2BFF74b54c5767c4Ff5699647cf",
+        "deviceIdx": 3,
+        "failType": "tx",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762154968795
+      },
+      {
+        "device": "0x0B83D5D8025765E3B7019C517900C18df004Be84",
+        "deviceIdx": 0,
+        "failType": "tx",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762154983410
+      },
+      {
+        "device": "0xe2acEA50d252F2BFF74b54c5767c4Ff5699647cf",
+        "deviceIdx": 3,
+        "failType": "tx",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762154998577
+      },
+      {
+        "device": "0x0B83D5D8025765E3B7019C517900C18df004Be84",
+        "deviceIdx": 0,
+        "failType": "tx",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762155014120
+      },
+      {
+        "device": "0xe2acEA50d252F2BFF74b54c5767c4Ff5699647cf",
+        "deviceIdx": 3,
+        "failType": "tx",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762155029234
+      }
+    ]
+  },
+  "privacy": {
+    "privacyLeakageProbability": 1,
+    "privacyLeakageProbability_model": 0.28500000000000003,
+    "contextLinkability": 0.08333333333333333,
+    "contextLinkability_model": 0.25,
+    "entropy": {
+      "location": 1,
+      "role": 1,
+      "status": 1
+    }
+  },
+  "crypto": {
+    "t_IPE_ms": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    "t_HE_enc_ms": [
+      1495,
+      1303,
+      1095,
+      1184,
+      1173,
+      1165,
+      1161,
+      1125,
+      1238,
+      1185,
+      1155,
+      1423,
+      1510,
+      1211,
+      1233,
+      1179,
+      1216,
+      1350
+    ],
+    "t_proof_gen_ms": [],
+    "gas_verify": [
+      1490064,
+      1490064,
+      1490088,
+      1490076,
+      434299,
+      434275,
+      438475,
+      434299,
+      434299,
+      438499,
+      438487,
+      434299
+    ],
+    "t_HE_enc_ms_last": 1350,
+    "ct_numeric_bytes_last": 2059,
+    "t_IPE_ms_p50": 0,
+    "t_IPE_ms_p95": 0,
+    "t_HE_enc_ms_p50": 1185,
+    "t_HE_enc_ms_p95": 1495,
+    "t_HE_enc_ms_avg": 1244.5,
+    "gas_verify_avg": 787268.6666666666
+  },
+  "attestations": {
+    "count": 18,
+    "invalid": 0
+  }
+}

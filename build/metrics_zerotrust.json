@@ -1,0 +1,224 @@
+{
+  "params": {
+    "NUM_DEVICES": 6,
+    "UPDATES_PER_DEVICE": 3
+  },
+  "performance": {
+    "TPS": 0,
+    "totalCommitted": 0,
+    "totalWindowSec": 46.22,
+    "latency_p50": 0,
+    "latency_p95": 0,
+    "latency_p99": 0,
+    "authz_p50": 19,
+    "authz_p95": 34,
+    "avgAuthzMs": 21.72222222222222,
+    "t_HE_enc_avg": 1511.888888888889,
+    "t_IPE_enc_avg": null,
+    "t_proof_gen_avg": null,
+    "latency_components": {
+      "L_auth": 21.72222222222222,
+      "L_enc": 1511.888888888889,
+      "L_proof": 0,
+      "L_mine": 0
+    },
+    "L_bar": 1533.611111111111
+  },
+  "pds": {
+    "R_struct": 0.5833333333333334,
+    "components": {
+      "r_k": 0.3333333333333333,
+      "r_l": 1,
+      "r_t": 0.5
+    },
+    "R_chain": 0.37125231709667617,
+    "components_chain": {
+      "r_A": 0.16666666666666666,
+      "r_H": 0.7892419038528016,
+      "r_L": 0.027777777777777776,
+      "r_C": 0
+    },
+    "R_policy": 0.39,
+    "PDS": 0.43862615854833814,
+    "PDS_reliability": 0.5148964126075024,
+    "PDS_risk": 0.4851035873924976
+  },
+  "verification": {
+    "totalAttempts": 18,
+    "successful": 0,
+    "failures": 18,
+    "failures_by_type": {
+      "invalidSig": 6,
+      "unknown": 12
+    },
+    "failed_device_addresses": [
+      "0x3d430D14a1F74BAFA388E583562B65164F918419",
+      "0x96a0dB563A628727b242960EdfA4F6f3D769D05d",
+      "0x6B77a11dD358fd9cA571D2a47D7d75bCbD3D366b",
+      "0x9155828e8732C92b018107fe073AdA7521c27A58",
+      "0xbfef7b367715781b158423b26AD76EcAaFA6DE64",
+      "0x50b876517E7c32e5A72e37dede12dAA35aC940e9"
+    ],
+    "failures_detailed": [
+      {
+        "device": "0x3d430D14a1F74BAFA388E583562B65164F918419",
+        "deviceIdx": 0,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762154390647
+      },
+      {
+        "device": "0x96a0dB563A628727b242960EdfA4F6f3D769D05d",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154393849
+      },
+      {
+        "device": "0x6B77a11dD358fd9cA571D2a47D7d75bCbD3D366b",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154396554
+      },
+      {
+        "device": "0x9155828e8732C92b018107fe073AdA7521c27A58",
+        "deviceIdx": 3,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762154399988
+      },
+      {
+        "device": "0xbfef7b367715781b158423b26AD76EcAaFA6DE64",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154402999
+      },
+      {
+        "device": "0x50b876517E7c32e5A72e37dede12dAA35aC940e9",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154405910
+      },
+      {
+        "device": "0x3d430D14a1F74BAFA388E583562B65164F918419",
+        "deviceIdx": 0,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762154407811
+      },
+      {
+        "device": "0x96a0dB563A628727b242960EdfA4F6f3D769D05d",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154410169
+      },
+      {
+        "device": "0x6B77a11dD358fd9cA571D2a47D7d75bCbD3D366b",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154412899
+      },
+      {
+        "device": "0x9155828e8732C92b018107fe073AdA7521c27A58",
+        "deviceIdx": 3,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762154414701
+      },
+      {
+        "device": "0xbfef7b367715781b158423b26AD76EcAaFA6DE64",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154417543
+      },
+      {
+        "device": "0x50b876517E7c32e5A72e37dede12dAA35aC940e9",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154420596
+      },
+      {
+        "device": "0x3d430D14a1F74BAFA388E583562B65164F918419",
+        "deviceIdx": 0,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762154422302
+      },
+      {
+        "device": "0x96a0dB563A628727b242960EdfA4F6f3D769D05d",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154424690
+      },
+      {
+        "device": "0x6B77a11dD358fd9cA571D2a47D7d75bCbD3D366b",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154427472
+      },
+      {
+        "device": "0x9155828e8732C92b018107fe073AdA7521c27A58",
+        "deviceIdx": 3,
+        "failType": "invalidSig",
+        "errSummary": "Returned error: VM Exception while processing transaction: revert device not authorized",
+        "ts": 1762154429486
+      },
+      {
+        "device": "0xbfef7b367715781b158423b26AD76EcAaFA6DE64",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154432049
+      },
+      {
+        "device": "0x50b876517E7c32e5A72e37dede12dAA35aC940e9",
+        "failType": "unknown",
+        "errSummary": "Returned error: VM Exception while processing transaction: out of gas",
+        "ts": 1762154434731
+      }
+    ]
+  },
+  "privacy": {
+    "privacyLeakageProbability": 1,
+    "privacyLeakageProbability_model": 0.28500000000000003,
+    "contextLinkability": 0.3333333333333333,
+    "contextLinkability_model": 0.25,
+    "entropy": {
+      "location": 1,
+      "role": 1,
+      "status": 1
+    }
+  },
+  "crypto": {
+    "t_IPE_ms": [],
+    "t_HE_enc_ms": [
+      1454,
+      1894,
+      1439,
+      2633,
+      1692,
+      1658,
+      1325,
+      1259,
+      1290,
+      1273,
+      1536,
+      1816,
+      1190,
+      1209,
+      1428,
+      1367,
+      1373,
+      1378
+    ],
+    "t_proof_gen_ms": [],
+    "gas_verify": [],
+    "t_HE_enc_ms_last": 1378,
+    "ct_numeric_bytes_last": 512,
+    "t_HE_enc_ms_p50": 1378,
+    "t_HE_enc_ms_p95": 1894,
+    "t_HE_enc_ms_avg": 1511.888888888889
+  },
+  "attestations": {
+    "count": 0,
+    "invalid": 0
+  }
+}

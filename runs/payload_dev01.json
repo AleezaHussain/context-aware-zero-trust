@@ -1,0 +1,15 @@
+{
+  "payload": {
+    "deviceId": "dev_01",
+    "deviceType": "env_sensor",
+    "temperature": 28,
+    "humidity": 43,
+    "timestamp": "2025-11-09T18:24:09.532Z",
+    "location": "Zone3",
+    "role": "env_sensor",
+    "status": "active",
+    "nonce": 9999
+  },
+  "signature": "0xf1228a6ee47773df8a572f74e6986d0d9fcf7548dd858b3573f1ec5264b68c262080e42a4ce0aa52876dc176d4b1eb6acc633cfbc16e5076d45006f6ea3f3daf1b",
+  "signer": "0xF476a4fbc4e0A918E2De5092342490752244dcAA"
+}
