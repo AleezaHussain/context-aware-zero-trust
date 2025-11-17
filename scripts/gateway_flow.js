@@ -8,7 +8,7 @@ function log(msg, obj) { console.log(msg); if (obj) console.dir(obj, { depth: 2 
 
 async function compileContract() {
   const source = FS.readFileSync(PATH.resolve(__dirname, '..', 'contracts', 'ContextAwareSmartContract.sol'), 'utf8');
-  const input = { language: 'Solidity', sources: { 'ContextAwareSmartContract.sol': { content: source } }, settings: { outputSelection: { '*': { '*': ['abi','evm.bytecode'] } } } };
+  const input = { language: 'Solidity', sources: { 'ContextAwareSmartContract.sol': { content: source } }, settings: { optimizer: { enabled: true, runs: 200 }, viaIR: true, outputSelection: { '*': { '*': ['abi','evm.bytecode'] } } } };
   const output = JSON.parse(SOLC.compile(JSON.stringify(input)));
   if (output.errors) {
     for (const e of output.errors) console.error(e.formattedMessage);
@@ -58,14 +58,15 @@ async function main() {
   // Gateway verifies (off-chain) and then calls setContextDataViaGateway
 
   const types = [
-    'uint256','uint256','uint256','uint256','uint256','uint256','uint256','uint256','uint256','uint256','address'
+    'uint256','uint256','uint256','uint256','uint256','uint256','uint256','uint256','uint256','uint256','bytes32'
   ];
 
   // helper to send gateway-submitted update
   async function gatewaySubmit(device, temperature, humidity) {
     const nonce = Number(await deployed.methods.nonces(device.address).call());
-    const vals = [temperature, humidity, 0, 0, 12, 0,0,0,0, nonce, deployed.options.address];
-    const encoded = web3.eth.abi.encodeParameters(types, vals);
+  const ctxHash = web3.utils.keccak256(web3.utils.asciiToHex('ctx'+nonce));
+  const vals = [temperature, humidity, 0, 0, 12, 0,0,0,0, nonce, ctxHash];
+  const encoded = web3.eth.abi.encodeParameters(types, vals);
     const hash = web3.utils.keccak256(encoded);
     const sig = web3.eth.accounts.sign(hash, device.privateKey);
 
@@ -76,9 +77,10 @@ async function main() {
     // Now gateway calls contract method setContextDataViaGateway with device signature parts
     const v = sig.v; const r = sig.r; const s = sig.s;
     const gas = 300000;
-    const payload = [temperature, humidity, 0, 0, 12, 0,0,0,0, nonce];
+  const payload = [temperature, humidity, 0, 0, 12, 0,0,0,0, nonce, ctxHash];
     // Build transaction data and have gateway sign it locally (gateway is an external account)
-    const data = deployed.methods.setContextDataViaGateway(payload, v, r, s).encodeABI();
+  // include empty ciphertext blob as fifth parameter
+  const data = deployed.methods.setContextDataViaGateway(payload, v, r, s, '0x').encodeABI();
     const txCount = await web3.eth.getTransactionCount(gateway.address);
     const gasPrice = await web3.eth.getGasPrice();
     const tx = {

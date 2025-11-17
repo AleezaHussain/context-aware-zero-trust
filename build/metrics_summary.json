@@ -1,140 +1,132 @@
 {
   "params": {
-    "NUM_DEVICES": 6,
-    "UPDATES_PER_DEVICE": 3
+    "NUM_DEVICES": 3,
+    "UPDATES_PER_DEVICE": 2
   },
   "performance": {
-    "TPS": 0.5066283880773452,
-    "totalCommitted": 18,
-    "totalWindowSec": 35.529,
-    "latency_p50": 386,
-    "latency_p95": 658,
-    "latency_p99": 658,
+    "TPS": 0,
+    "totalCommitted": 0,
+    "totalWindowSec": 0.229,
+    "latency_p50": 0,
+    "latency_p95": 0,
+    "latency_p99": 0,
     "authz_p50": 0,
     "authz_p95": 0,
     "avgAuthzMs": 0,
-    "t_HE_enc_avg": 1395.5,
-    "t_IPE_enc_avg": 0.05555555555555555,
+    "t_HE_enc_avg": null,
+    "t_IPE_enc_avg": null,
     "t_proof_gen_avg": null,
     "latency_components": {
       "L_auth": 0,
-      "L_enc": 1395.5555555555557,
+      "L_enc": 0,
       "L_proof": 0,
       "L_mine": 0
     },
-    "L_bar": 1395.5555555555557
+    "L_bar": 0
   },
   "pds": {
-    "R_struct": 0.43333333333333335,
+    "R_struct": 0.36666666666666664,
     "components": {
-      "r_k": 0.3333333333333333,
+      "r_k": 0.16666666666666666,
       "r_l": 1,
       "r_t": 0
     },
-    "R_chain": 0.47125231709667614,
+    "R_chain": 0.5,
     "components_chain": {
-      "r_A": 0.16666666666666666,
-      "r_H": 0.7892419038528016,
-      "r_L": 0.027777777777777776,
-      "r_C": 1
+      "r_A": 0.3333333333333333,
+      "r_H": 1,
+      "r_L": 0,
+      "r_C": 0
     },
-    "R_policy": 0.34,
-    "PDS": 0.4336261585483381,
-    "PDS_reliability": 0.4898964126075024,
-    "PDS_risk": 0.5101035873924976
+    "R_policy": 0.62,
+    "PDS": 0.484,
+    "PDS_reliability": 0.5504166666666667,
+    "PDS_risk": 0.44958333333333333
   },
   "verification": {
-    "totalAttempts": 18,
-    "successful": 18,
-    "failures": 0,
-    "failures_by_type": {},
-    "failed_device_addresses": [],
-    "failures_detailed": []
+    "totalAttempts": 6,
+    "successful": 0,
+    "failures": 6,
+    "failures_by_type": {
+      "context_violation": 6
+    },
+    "failed_device_addresses": [
+      "0x8554715aDB373629E8c30986AC0b8eca14A8b6de",
+      "0x1Cb9E82ded7c66c9a4682b0118b50D722b0d40F0",
+      "0x585377f13dF4892FC9281c5dEc2486df3F1826c2"
+    ],
+    "failures_detailed": [
+      {
+        "device": "0x8554715aDB373629E8c30986AC0b8eca14A8b6de",
+        "deviceIdx": 0,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762807414406
+      },
+      {
+        "device": "0x1Cb9E82ded7c66c9a4682b0118b50D722b0d40F0",
+        "deviceIdx": 1,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762807414448
+      },
+      {
+        "device": "0x585377f13dF4892FC9281c5dEc2486df3F1826c2",
+        "deviceIdx": 2,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762807414494
+      },
+      {
+        "device": "0x8554715aDB373629E8c30986AC0b8eca14A8b6de",
+        "deviceIdx": 0,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762807414510
+      },
+      {
+        "device": "0x1Cb9E82ded7c66c9a4682b0118b50D722b0d40F0",
+        "deviceIdx": 1,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762807414547
+      },
+      {
+        "device": "0x585377f13dF4892FC9281c5dEc2486df3F1826c2",
+        "deviceIdx": 2,
+        "failType": "context_violation",
+        "errReason": "context invalid",
+        "errSummary": "blocked at gateway (not sent on-chain)",
+        "ts": 1762807414601
+      }
+    ]
   },
   "privacy": {
-    "privacyLeakageProbability": 1,
+    "privacyLeakageProbability": 0,
     "privacyLeakageProbability_model": 0.28500000000000003,
-    "contextLinkability": 0.05555555555555555,
+    "contextLinkability": 0,
     "contextLinkability_model": 0.25,
     "entropy": {
-      "location": 1,
-      "role": 1,
-      "status": 1
+      "location": 0,
+      "role": 0,
+      "status": 0
     }
   },
   "crypto": {
-    "t_IPE_ms": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      1
-    ],
-    "t_HE_enc_ms": [
-      1796,
-      1276,
-      1239,
-      1680,
-      1712,
-      1120,
-      1129,
-      1204,
-      1318,
-      1876,
-      1309,
-      1511,
-      1603,
-      1244,
-      1163,
-      1220,
-      1363,
-      1356
-    ],
+    "t_IPE_ms": [],
+    "t_HE_enc_ms": [],
     "t_proof_gen_ms": [],
-    "gas_verify": [
-      1635876,
-      1635864,
-      1635864,
-      1635888,
-      1635876,
-      1635852,
-      435887,
-      438699,
-      438687,
-      435887,
-      438699,
-      438675,
-      435887,
-      435875,
-      438675,
-      435875,
-      435899,
-      438687
-    ],
-    "t_HE_enc_ms_last": 1356,
-    "ct_numeric_bytes_last": 2059,
-    "t_IPE_ms_p50": 0,
-    "t_IPE_ms_p95": 0,
-    "t_HE_enc_ms_p50": 1309,
-    "t_HE_enc_ms_p95": 1796,
-    "t_HE_enc_ms_avg": 1395.5,
-    "gas_verify_avg": 836814
+    "gas_verify": [],
+    "t_HE_enc_ms_last": null,
+    "ct_numeric_bytes_last": null
   },
   "attestations": {
-    "count": 18,
+    "count": 0,
     "invalid": 0
   }
 }
